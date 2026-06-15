@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roeung — Keeper Review Wireframes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f7f7;
+  --bg3: #f0f0f0;
+  --text1: #1a1a1a;
+  --text2: #555555;
+  --text3: #999999;
+  --border1: #cccccc;
+  --border2: #e0e0e0;
+  --border3: #eeeeee;
+  --info: #0066cc;
+  --info-bg: #eef4ff;
+  --success: #2d7d2d;
+  --danger: #cc2200;
+  --danger-border: #e8c0b8;
+  --warn-bg: #faeeda;
+  --warn: #ba7517;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: #e8e8e8; padding: 24px; color: var(--text1); }
+h1 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+
+/* Controls */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+.device-toggle { display: flex; border: 1px solid var(--border1); border-radius: 20px; overflow: hidden; background: var(--bg); }
+.dt-btn { font-size: 11px; padding: 5px 14px; cursor: pointer; color: var(--text2); background: transparent; border: none; display: flex; align-items: center; gap: 4px; }
+.dt-btn.active { background: var(--text1); color: var(--bg); }
+.nav-btn { font-size: 11px; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 20px; cursor: pointer; background: var(--bg); color: var(--text2); }
+.nav-btn:hover { background: var(--bg2); }
+.nav-btn.cur { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.sep { font-size: 11px; color: var(--text3); margin: 0 4px; }
+
+/* ══ DESKTOP ══════════════════════════════════════ */
+.browser { border: 1.5px solid var(--border1); border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+.browser-bar { background: var(--bg2); padding: 8px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--border3); }
+.browser-dots { display: flex; gap: 5px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); }
+.url-bar { flex: 1; background: var(--bg); border: 0.5px solid var(--border3); border-radius: 6px; padding: 3px 10px; font-size: 10px; color: var(--text3); }
+.d-layout { display: flex; min-height: 520px; }
+.d-sidebar { width: 180px; flex-shrink: 0; border-right: 0.5px solid var(--border3); padding: 14px 12px; background: var(--bg2); display: flex; flex-direction: column; }
+.sb-section { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; }
+.sb-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 6px; font-size: 11px; color: var(--text2); cursor: pointer; margin-bottom: 2px; }
+.sb-item:hover { background: var(--bg3); }
+.sb-item.active { background: var(--bg); color: var(--text1); font-weight: 500; }
+.sb-item i { font-size: 14px; margin-right: 5px; }
+.badge { font-size: 9px; background: var(--text1); color: var(--bg); border-radius: 10px; padding: 1px 6px; }
+.badge-warn { font-size: 9px; background: var(--warn); color: white; border-radius: 10px; padding: 1px 6px; }
+.sb-div { height: 0.5px; background: var(--border3); margin: 10px 0; }
+.sb-keeper { font-size: 10px; color: var(--text3); margin-top: auto; }
+.sb-keeper strong { display: block; color: var(--text2); font-weight: 500; margin-bottom: 2px; font-size: 11px; }
+.d-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.d-main { flex: 1; padding: 16px 18px; overflow: auto; }
+.page-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.page-sub { font-size: 11px; color: var(--text3); margin-bottom: 14px; }
+
+/* Queue */
+.toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sort-sel { font-size: 11px; border: 0.5px solid var(--border2); border-radius: 6px; padding: 3px 8px; background: var(--bg); color: var(--text1); }
+.filter-row { display: flex; gap: 6px; }
+.f-chip { font-size: 10px; padding: 3px 9px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--text2); cursor: pointer; }
+.f-chip:hover { background: var(--bg2); }
+.q-card { border: 0.5px solid var(--border3); border-radius: 8px; padding: 10px 13px; margin-bottom: 7px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; transition: border-color 0.1s; }
+.q-card:hover:not(.locked) { border-color: var(--border2); background: var(--bg2); }
+.q-card.locked { opacity: 0.6; cursor: default; }
+.qc-title { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.qc-meta { font-size: 10px; color: var(--text3); }
+.qc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.tag-warn { font-size: 9px; background: var(--warn-bg); color: var(--warn); border-radius: 4px; padding: 2px 6px; font-weight: 500; }
+.tag-lock { font-size: 9px; background: var(--bg2); color: var(--text3); border-radius: 4px; padding: 2px 6px; }
+.tag-lang { font-size: 9px; background: var(--bg2); color: var(--text2); border-radius: 4px; padding: 2px 6px; }
+.qdur { font-size: 10px; color: var(--text3); }
+
+/* Review */
+.review-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.player { border: 0.5px solid var(--border3); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.play-btn { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.play-btn i { font-size: 12px; color: var(--text2); }
+.wav { flex: 1; height: 32px; display: flex; align-items: center; gap: 2px; }
+.wb { border-radius: 1px; background: var(--border3); width: 3px; }
+.wb.p { background: var(--text1); }
+.pt { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.spd { font-size: 10px; border: 0.5px solid var(--border2); border-radius: 4px; padding: 2px 6px; color: var(--text2); cursor: pointer; }
+.two-col { display: flex; gap: 12px; }
+.col { flex: 1; min-width: 0; }
+.col-sm { width: 195px; flex-shrink: 0; }
+.tc-label { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+.tblock { border: 0.5px solid var(--border3); border-radius: 6px; padding: 8px 10px; font-size: 11px; line-height: 1.7; min-height: 110px; }
+.tlow { background: var(--warn-bg); border-radius: 2px; padding: 0 1px; text-decoration: underline; text-decoration-color: var(--warn); text-decoration-style: wavy; }
+.field-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 5px; margin-top: 10px; }
+.topt { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 0.5px solid var(--border3); border-radius: 6px; font-size: 11px; color: var(--text2); cursor: pointer; margin-bottom: 4px; }
+.topt.sel { border-color: var(--text1); color: var(--text1); }
+.radio { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--border2); flex-shrink: 0; }
+.topt.sel .radio { border-color: var(--text1); background: var(--text1); }
+.tcustom { width: 100%; padding: 6px 10px; border: 0.5px dashed var(--border2); border-radius: 6px; font-size: 11px; background: var(--bg); color: var(--text1); margin-top: 2px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { padding: 3px 9px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 10px; color: var(--text2); cursor: pointer; }
+.chip.sel { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.chip-add { padding: 3px 9px; border-radius: 20px; border: 0.5px dashed var(--border2); font-size: 10px; color: var(--text3); cursor: pointer; }
+.pi { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border: 0.5px solid var(--border3); border-radius: 6px; font-size: 10px; margin-bottom: 4px; }
+.pi-n { flex: 1; font-weight: 500; }
+.pi-link { font-size: 10px; border: 0.5px solid var(--border2); border-radius: 4px; padding: 1px 6px; color: var(--info); cursor: pointer; background: var(--info-bg); }
+.pi-ok { font-size: 10px; color: var(--success); }
+.pi-dis { font-size: 10px; color: var(--text3); cursor: pointer; }
+.flag-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 0.5px solid var(--border3); border-radius: 6px; }
+.flag-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.toggle { width: 32px; height: 18px; border-radius: 9px; background: var(--border2); position: relative; cursor: pointer; flex-shrink: 0; }
+.toggle.on { background: var(--warn); }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: left 0.15s; }
+.toggle.on::after { left: 16px; }
+
+/* Decision bar */
+.d-bar { border-top: 0.5px solid var(--border3); padding: 11px 16px; display: flex; align-items: center; gap: 8px; background: var(--bg2); }
+.db-label { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.btn-approve { padding: 7px 14px; background: var(--text1); color: var(--bg); border: none; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; }
+.btn-flag { padding: 6px 12px; background: transparent; color: var(--text2); border: 0.5px solid var(--border2); border-radius: 6px; font-size: 11px; cursor: pointer; }
+.btn-arch { padding: 6px 12px; background: transparent; color: var(--danger); border: 0.5px solid var(--danger-border); border-radius: 6px; font-size: 11px; cursor: pointer; margin-left: auto; }
+
+/* Published */
+.confirm-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+.ci { width: 52px; height: 52px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.ci i { font-size: 26px; color: var(--text1); }
+.ct { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.cs { font-size: 12px; color: var(--text2); line-height: 1.6; max-width: 300px; margin: 0 auto 20px; }
+.clink { font-size: 12px; color: var(--info); cursor: pointer; display: block; margin-bottom: 8px; }
+
+/* ══ MOBILE ══════════════════════════════════════ */
+.phone-wrap { display: flex; gap: 24px; align-items: flex-start; }
+.phone { width: 270px; flex-shrink: 0; }
+.phone-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; text-align: center; }
+.phone-frame { border: 2px solid #333; border-radius: 36px; background: var(--bg); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.m-notch { width: 72px; height: 18px; background: #333; border-radius: 0 0 10px 10px; margin: 0 auto; }
+.m-app-header { background: var(--bg2); padding: 8px 12px 0; border-bottom: 0.5px solid var(--border3); display: flex; align-items: center; justify-content: space-between; }
+.m-app-name { font-size: 11px; font-weight: 600; }
+.m-app-keeper { font-size: 9px; color: var(--text3); }
+.m-screen { padding: 12px; min-height: 500px; display: flex; flex-direction: column; overflow: hidden; }
+.m-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 10px; border-bottom: 0.5px solid var(--border3); margin-bottom: 10px; }
+.m-back { font-size: 11px; color: var(--info); cursor: pointer; }
+.m-title { font-size: 12px; font-weight: 600; }
+.m-sl { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 5px; margin-top: 9px; }
+.m-qcard { border: 0.5px solid var(--border3); border-radius: 8px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; }
+.m-qcard:hover { background: var(--bg2); }
+.m-qc-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.m-qtitle { font-size: 11px; font-weight: 500; margin-bottom: 2px; }
+.m-qmeta { font-size: 9px; color: var(--text3); }
+.m-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.m-sort-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.m-player { border: 0.5px solid var(--border3); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.m-play { width: 26px; height: 26px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+.m-play i { font-size: 11px; color: var(--text2); }
+.m-wav { flex: 1; height: 24px; display: flex; align-items: center; gap: 1.5px; }
+.m-wb { border-radius: 1px; background: var(--border3); width: 2px; }
+.m-wb.p { background: var(--text1); }
+.m-time { font-size: 9px; color: var(--text3); flex-shrink: 0; }
+.lang-tabs { display: flex; border: 0.5px solid var(--border2); border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+.lt { flex: 1; padding: 5px; text-align: center; font-size: 10px; cursor: pointer; color: var(--text2); }
+.lt.active { background: var(--text1); color: var(--bg); font-weight: 500; }
+.m-tblock { border: 0.5px solid var(--border3); border-radius: 6px; padding: 8px 9px; font-size: 10px; line-height: 1.65; min-height: 90px; margin-bottom: 8px; }
+.m-topt { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border: 0.5px solid var(--border3); border-radius: 6px; font-size: 10px; color: var(--text2); cursor: pointer; margin-bottom: 3px; }
+.m-topt.sel { border-color: var(--text1); color: var(--text1); }
+.m-radio { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border2); flex-shrink: 0; }
+.m-topt.sel .m-radio { border-color: var(--text1); background: var(--text1); }
+.m-chip { padding: 3px 8px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 10px; color: var(--text2); display: inline-block; margin: 0 3px 3px 0; }
+.m-chip.sel { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.m-pi { display: flex; align-items: center; gap: 6px; padding: 5px 7px; border: 0.5px solid var(--border3); border-radius: 6px; font-size: 10px; margin-bottom: 3px; }
+.m-pi-n { flex: 1; font-weight: 500; }
+.m-flag-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 9px; border: 0.5px solid var(--border3); border-radius: 6px; }
+.m-flag-label { font-size: 10px; color: var(--text2); }
+.m-flag-sub { font-size: 9px; color: var(--text3); }
+.m-dbar { border-top: 0.5px solid var(--border3); padding: 10px 14px; display: flex; align-items: center; gap: 6px; background: var(--bg2); }
+.m-approve { flex: 1; padding: 9px; background: var(--text1); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; }
+.m-more { width: 38px; height: 38px; border: 0.5px solid var(--border2); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; background: var(--bg); }
+.m-more i { font-size: 16px; color: var(--text2); }
+.m-sheet { background: var(--bg); border: 0.5px solid var(--border3); border-radius: 10px; padding: 10px; margin-top: 6px; }
+.m-sheet-title { font-size: 10px; font-weight: 500; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+.m-sheet-btn { display: block; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 11px; text-align: left; cursor: pointer; background: transparent; border: 0.5px solid var(--border3); margin-bottom: 5px; color: var(--text2); }
+.m-sheet-btn.danger { color: var(--danger); border-color: var(--danger-border); }
+.m-confirm { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 10px; text-align: center; flex: 1; }
+.m-ci { width: 44px; height: 44px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.m-ci i { font-size: 22px; color: var(--text1); }
+.m-ct { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+.m-cs { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 16px; }
+.m-cl { font-size: 11px; color: var(--info); cursor: pointer; margin-bottom: 8px; display: block; }
+
+/* Mobile notes panel */
+.m-notes { flex: 1; min-width: 0; padding-top: 8px; }
+.m-notes-header { font-size: 10px; color: var(--text3); margin-bottom: 10px; }
+.m-note { padding-left: 10px; border-left: 2px solid var(--border2); margin-bottom: 10px; }
+.m-note-t { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.m-note-d { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+/* Annotations */
+.ann-section { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border2); }
+.ann-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 12px; }
+.ann-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.ann-item { flex: 1; min-width: 200px; padding-left: 10px; border-left: 2px solid var(--border2); }
+.ann-t { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.ann-d { font-size: 11px; color: var(--text2); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Roeung (រឿង) — Keeper Review Wireframes</h1>
+<p class="subtitle">Sea family · Ellen Sea (Keeper) · Phase 1 MVP · Responsive — desktop primary · Version 0.2</p>
+
+<div class="controls">
+  <div class="device-toggle">
+    <button class="dt-btn active" id="dt-desk" onclick="setDevice('desktop')"><i class="ti ti-device-desktop"></i> Desktop</button>
+    <button class="dt-btn" id="dt-mob" onclick="setDevice('mobile')"><i class="ti ti-device-mobile"></i> Mobile</button>
+  </div>
+  <span class="sep">|</span>
+  <button class="nav-btn cur" onclick="goTo(0)">3.1 Review queue</button>
+  <button class="nav-btn" onclick="goTo(1)">3.2 Story review</button>
+  <button class="nav-btn" onclick="goTo(2)">3.3 Published</button>
+</div>
+
+<div id="frame-area"></div>
+
+<div class="ann-section">
+  <div class="ann-title">Annotations</div>
+  <div class="ann-grid" id="ann-grid"></div>
+</div>
+
+<script>
+let cur = 0, device = 'desktop', flagOn = false, titleSel = 0, langTab = 'kh', showSheet = false, menuOpen = false;
+
+const stories = [
+  { title: 'The noodle restaurant in Phnom Penh', narrator: 'Grandfather Sokha', date: 'Today, 9:14am', dur: '14 min', lang: 'KH', warn: true, locked: false },
+  { title: 'Meeting your grandmother for the first time', narrator: 'Father — Dara Sea', date: 'Yesterday, 6:30pm', dur: '8 min', lang: 'EN', warn: false, locked: true, locker: 'Sopheap' },
+  { title: 'The boat from Thailand to Germany', narrator: 'Grandmother Maly', date: '3 days ago', dur: '22 min', lang: 'KH', warn: true, locked: false },
+  { title: 'My first day of school in Berlin', narrator: 'Aunt Sreymom', date: '5 days ago', dur: '6 min', lang: 'EN', warn: false, locked: false },
+];
+const titles = [
+  'The noodle restaurant in Phnom Penh',
+  'Grandfather\'s famous noodle shop',
+  'Before the war: a family business',
+];
+
+function setDevice(d) {
+  device = d; menuOpen = false;
+  document.getElementById('dt-desk').className = 'dt-btn' + (d === 'desktop' ? ' active' : '');
+  document.getElementById('dt-mob').className = 'dt-btn' + (d === 'mobile' ? ' active' : '');
+  render();
+}
+function goTo(i) {
+  cur = i; showSheet = false; menuOpen = false;
+  document.querySelectorAll('.nav-btn').forEach((b, idx) => b.className = 'nav-btn' + (idx === i ? ' cur' : ''));
+  render();
+}
+
+function toggleMenu() { menuOpen = !menuOpen; render(); }
+
+function hbBtn(sz) {
+  return `<button onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0"><i class="ti ti-menu-2" style="font-size:${sz||15}px;color:var(--text2)"></i></button>`;
+}
+
+function drawerHTML(act, showQueue) {
+  const items = [{key:'book',icon:'ti-book',label:'The Book'},{key:'record',icon:'ti-microphone',label:'Record a Story'},...(showQueue?[{key:'queue',icon:'ti-inbox',label:'Review Queue'}]:[])];
+  return `<div onclick="toggleMenu()" style="position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:50;cursor:pointer"></div><div style="position:absolute;top:0;right:0;bottom:0;width:72%;max-width:240px;background:var(--bg);z-index:51;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,0.12)"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:0.5px solid var(--border3)"><div style="font-size:12px;font-weight:600;color:var(--text1)">❧ The Sea Family</div><button onclick="toggleMenu()" style="background:none;border:none;font-size:18px;color:var(--text2);cursor:pointer;line-height:1;padding:0">×</button></div><nav style="padding:6px;flex:1">${items.map(a=>`<div onclick="toggleMenu()" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:12px;color:${a.key===act?'var(--text1)':'var(--text2)'};font-weight:${a.key===act?500:400};background:${a.key===act?'var(--bg2)':'transparent'};cursor:pointer;margin-bottom:2px"><i class="ti ${a.icon}" style="font-size:15px"></i>${a.label}</div>`).join('')}</nav><div style="padding:12px 14px;border-top:0.5px solid var(--border3)"><div style="font-size:10px;color:var(--text3);margin-bottom:6px">Language</div><div style="display:flex;border:0.5px solid var(--border2);border-radius:20px;overflow:hidden;width:fit-content"><button style="font-size:10px;padding:3px 10px;background:var(--text1);color:var(--bg);border:none;cursor:pointer">EN</button><button style="font-size:10px;padding:3px 10px;background:transparent;color:var(--text2);border:none;cursor:pointer">KH</button></div></div></div>`;
+}
+
+function wbars(n, frac, mobile) {
+  const h = [12,18,10,22,16,28,20,24,14,26,10,30,18,12,24,16,28,10,20,16,22,14,26,18,30,12,20,24,16,22];
+  return h.slice(0, n).map((v, i) =>
+    `<div class="${mobile ? 'm-wb' : 'wb'}${i/n < frac ? ' p' : ''}" style="height:${v}px"></div>`
+  ).join('');
+}
+
+/* ── DESKTOP SCREENS ────────────────────────────── */
+function dQueue() {
+  return `
+    <div class="page-title">Review queue</div>
+    <div class="page-sub">4 stories awaiting review</div>
+    <div class="toolbar">
+      <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2);">
+        Sort: <select class="sort-sel"><option>Newest first</option><option>Oldest first</option></select>
+      </div>
+      <div class="filter-row">
+        <div class="f-chip">All</div><div class="f-chip">Flagged</div><div class="f-chip">KH</div><div class="f-chip">EN</div>
+      </div>
+    </div>
+    ${stories.map(s => `
+      <div class="q-card${s.locked ? ' locked' : ''}" onclick="${s.locked ? '' : 'goTo(1)'}">
+        <div style="flex:1;min-width:0;">
+          <div class="qc-title">${s.title}</div>
+          <div class="qc-meta">${s.narrator} · ${s.date}</div>
+        </div>
+        <div class="qc-right">
+          ${s.warn ? `<span class="tag-warn"><i class="ti ti-alert-triangle"></i> Translation</span>` : ''}
+          ${s.locked ? `<span class="tag-lock"><i class="ti ti-lock"></i> ${s.locker} reviewing</span>` : ''}
+          <span class="tag-lang">${s.lang}</span>
+          <span class="qdur">${s.dur}</span>
+        </div>
+      </div>`).join('')}`;
+}
+
+function dReview() {
+  return `
+    <div class="review-header">
+      <div>
+        <div class="page-title">Grandfather Sokha · 14 min · KH</div>
+        <div class="page-sub">Submitted today 9:14am · You are reviewing</div>
+      </div>
+      <span class="tag-warn"><i class="ti ti-alert-triangle"></i> Translation needs review</span>
+    </div>
+    <div class="player">
+      <div class="play-btn"><i class="ti ti-player-play"></i></div>
+      <div class="wav">${wbars(35, 0.28, false)}</div>
+      <div class="pt">03:54 / 14:02</div>
+      <div class="spd">1×</div>
+    </div>
+    <div class="two-col" style="margin-bottom:12px;">
+      <div class="col">
+        <div class="tc-label">Khmer (original) <i class="ti ti-edit" style="font-size:11px;cursor:pointer;"></i></div>
+        <div class="tblock">ហាងមីរបស់할아버지 នៅក្នុងភ្នំពេញគឺល្បីណាស់។ មនុស្សគ្រប់គ្នាដឹងអំពីវា — តារា អ្នកនយោបាយ គ្រប់ប្រភេទ។ <span class="tlow">ខ្ញុំចាំថា...</span> ពេលខ្ញុំជាកុមារ ខ្ញុំបានជួយក្នុងហាងនៅចុងសប្ដាហ៍។</div>
+      </div>
+      <div class="col">
+        <div class="tc-label">English (translation) <i class="ti ti-edit" style="font-size:11px;cursor:pointer;"></i></div>
+        <div class="tblock">Grandfather's noodle shop in Phnom Penh was very famous. Everyone knew it — film stars, politicians, all kinds of people. <span class="tlow">I remember that...</span> as a child I would help in the shop on weekends.</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="col">
+        <div class="field-label">Story title</div>
+        ${titles.map((t, i) => `
+          <div class="topt${titleSel === i ? ' sel' : ''}" onclick="titleSel=${i};render()">
+            <div class="radio"></div><span>${t}</span>
+          </div>`).join('')}
+        <input class="tcustom" type="text" placeholder="Or write your own…" />
+        <div class="field-label">Translation quality</div>
+        <div class="flag-row">
+          <div>
+            <div style="font-size:11px;color:var(--text2);">Mark as "Translation approximate"</div>
+            <div class="flag-sub">Visible to readers on the story page</div>
+          </div>
+          <div class="toggle${flagOn ? ' on' : ''}" onclick="flagOn=!flagOn;render()"></div>
+        </div>
+      </div>
+      <div class="col-sm">
+        <div class="field-label">Recorder's tags</div>
+        <div class="chip-row" style="margin-bottom:6px;">
+          <div class="chip sel">Grandfather Sokha</div>
+          <div class="chip">Grandmother Maly</div>
+          <div class="chip-add">+ Add</div>
+        </div>
+        <div class="field-label">AI — people mentioned</div>
+        <div class="pi"><i class="ti ti-user" style="font-size:12px;color:var(--text3);"></i><div class="pi-n">"Uncle Virak"</div><div class="pi-link">Link</div></div>
+        <div class="pi"><i class="ti ti-user" style="font-size:12px;color:var(--text3);"></i><div class="pi-n">"a French customer"</div><div class="pi-dis">Dismiss</div></div>
+        <div class="pi" style="opacity:0.55;"><i class="ti ti-user-check" style="font-size:12px;color:var(--success);"></i><div class="pi-n">"Grandfather Sokha"</div><div class="pi-ok"><i class="ti ti-check"></i> Linked</div></div>
+      </div>
+    </div>`;
+}
+
+function dPublished() {
+  return `
+    <div class="confirm-wrap">
+      <div class="ci"><i class="ti ti-book-upload"></i></div>
+      <div class="ct">Story published to the Sea family book</div>
+      <div class="cs">"The noodle restaurant in Phnom Penh" by Grandfather Sokha is now live. The narrator has been notified.</div>
+      <a class="clink" onclick="goTo(0)"><i class="ti ti-arrow-right"></i> View in family book</a>
+      <a class="clink" onclick="goTo(0)"><i class="ti ti-inbox"></i> Back to review queue (3 remaining)</a>
+    </div>`;
+}
+
+function dDecisionBar() {
+  return cur !== 1 ? '' : `
+    <div class="d-bar">
+      <span class="db-label">Publish as:</span>
+      <button class="btn-approve" onclick="goTo(2)"><i class="ti ti-check"></i> Approve</button>
+      <button class="btn-flag" onclick="goTo(2)">Publish with flag</button>
+      <div style="flex:1;"></div>
+      <button class="btn-arch"><i class="ti ti-archive"></i> Archive privately</button>
+    </div>`;
+}
+
+/* ── MOBILE SCREENS ────────────────────────────── */
+function mQueue() {
+  return `
+    <div class="m-sort-row">
+      <select class="sort-sel" style="font-size:10px;"><option>Newest first</option><option>Oldest first</option></select>
+      <div style="display:flex;gap:4px;">
+        <div class="f-chip" style="font-size:9px;padding:2px 7px;">All</div>
+        <div class="f-chip" style="font-size:9px;padding:2px 7px;">Flagged</div>
+        <div class="f-chip" style="font-size:9px;padding:2px 7px;">KH</div>
+      </div>
+    </div>
+    ${stories.map(s => `
+      <div class="m-qcard" onclick="${s.locked ? '' : 'goTo(1)'}">
+        <div class="m-qc-row">
+          <div style="flex:1;min-width:0;">
+            <div class="m-qtitle">${s.title}</div>
+            <div class="m-qmeta">${s.narrator} · ${s.date}</div>
+          </div>
+          <div class="m-badges">
+            ${s.warn ? `<span class="tag-warn" style="font-size:8px;padding:1px 5px;"><i class="ti ti-alert-triangle"></i></span>` : ''}
+            ${s.locked ? `<span class="tag-lock" style="font-size:8px;padding:1px 5px;"><i class="ti ti-lock"></i></span>` : ''}
+            <span class="tag-lang" style="font-size:8px;">${s.lang} · ${s.dur}</span>
+          </div>
+        </div>
+      </div>`).join('')}`;
+}
+
+function mReview() {
+  return `
+    <div class="m-bar">
+      <span class="m-back" onclick="goTo(0)"><i class="ti ti-arrow-left"></i></span>
+      <span class="m-title">Grandfather Sokha</span>
+      <span class="tag-warn" style="font-size:8px;padding:1px 5px;"><i class="ti ti-alert-triangle"></i></span>
+    </div>
+    <div class="m-player">
+      <div class="m-play"><i class="ti ti-player-play"></i></div>
+      <div class="m-wav">${wbars(28, 0.28, true)}</div>
+      <div class="m-time">03:54 / 14:02</div>
+    </div>
+    <div class="lang-tabs">
+      <div class="lt${langTab === 'kh' ? ' active' : ''}" onclick="langTab='kh';render()">Khmer (original)</div>
+      <div class="lt${langTab === 'en' ? ' active' : ''}" onclick="langTab='en';render()">English</div>
+    </div>
+    <div class="m-tblock">
+      ${langTab === 'kh'
+        ? `ហាងមីរបស់할아버지 នៅក្នុងភ្នំពេញគឺល្បីណាស់។ <span class="tlow">ខ្ញុំចាំថា...</span> ពេលខ្ញុំជាកុមារ ខ្ញុំបានជួយក្នុងហាង។`
+        : `Grandfather's noodle shop in Phnom Penh was very famous. <span class="tlow">I remember that...</span> as a child I helped in the shop.`}
+      <div style="margin-top:6px;font-size:9px;color:var(--text3);"><i class="ti ti-edit"></i> Tap to edit</div>
+    </div>
+    <div class="m-sl">Story title</div>
+    ${titles.map((t, i) => `
+      <div class="m-topt${titleSel === i ? ' sel' : ''}" onclick="titleSel=${i};render()">
+        <div class="m-radio"></div><span>${t}</span>
+      </div>`).join('')}
+    <div class="m-sl">Tags</div>
+    <div style="margin-bottom:6px;">
+      <span class="m-chip sel">Grandfather Sokha</span>
+      <span class="m-chip">Grandmother Maly</span>
+      <span class="m-chip" style="border-style:dashed;color:var(--text3);">+ Add</span>
+    </div>
+    <div class="m-sl">AI people · <span style="text-transform:none;font-weight:400;">link or dismiss</span></div>
+    <div class="m-pi"><i class="ti ti-user" style="font-size:11px;color:var(--text3);"></i><div class="m-pi-n">"Uncle Virak"</div><div class="pi-link">Link</div></div>
+    <div class="m-pi"><i class="ti ti-user" style="font-size:11px;color:var(--text3);"></i><div class="m-pi-n">"a French customer"</div><div class="pi-dis">Dismiss</div></div>
+    <div class="m-sl">Translation quality</div>
+    <div class="m-flag-row">
+      <div><div class="m-flag-label">Mark as "Translation approximate"</div><div class="m-flag-sub">Visible to readers</div></div>
+      <div class="toggle${flagOn ? ' on' : ''}" onclick="flagOn=!flagOn;render()"></div>
+    </div>
+    ${showSheet ? `
+    <div class="m-sheet">
+      <div class="m-sheet-title">More options</div>
+      <button class="m-sheet-btn" onclick="goTo(2)"><i class="ti ti-flag"></i> Publish with flag</button>
+      <button class="m-sheet-btn danger"><i class="ti ti-archive"></i> Archive privately</button>
+    </div>` : ''}`;
+}
+
+function mPublished() {
+  return `
+    <div class="m-confirm">
+      <div class="m-ci"><i class="ti ti-book-upload"></i></div>
+      <div class="m-ct">Story published</div>
+      <div class="m-cs">"The noodle restaurant in Phnom Penh" is now live in the Sea family book.</div>
+      <a class="m-cl" onclick="goTo(0)"><i class="ti ti-arrow-right"></i> View in family book</a>
+      <a class="m-cl" onclick="goTo(0)"><i class="ti ti-inbox"></i> Back to queue (3 remaining)</a>
+    </div>`;
+}
+
+function mDecisionBar() {
+  return cur !== 1 ? '' : `
+    <div class="m-dbar">
+      <button class="m-approve" onclick="goTo(2)"><i class="ti ti-check"></i> Approve</button>
+      <div class="m-more" onclick="showSheet=!showSheet;render()"><i class="ti ti-dots"></i></div>
+    </div>`;
+}
+
+const mNotes = [
+  [{ t: 'Queue cards compact', d: 'Warning and lock badges shrink to icons. Sort and filter stay at top. Tapping an unlocked card opens Story Review.' }],
+  [
+    { t: 'KH / EN tabs replace columns', d: 'On mobile the two-column bilingual transcript becomes tabs. Both remain editable — tap a block to edit.' },
+    { t: '··· reveals secondary actions', d: '"Publish with flag" and "Archive privately" live in the dot-dot-dot sheet so the bottom bar stays clean.' },
+    { t: 'Fields stack below transcript', d: 'Title picker, tags, AI people, and translation flag scroll below the audio player and transcript.' },
+  ],
+  [{ t: 'Confirmation identical', d: 'Same message and links. No layout change needed at this screen.' }],
+];
+
+const dAnnotations = [
+  [
+    { t: 'Sort: newest-first default', d: 'Overrides PRD — newest first is more motivating for active families. Oldest-first available for chronological backlog processing.' },
+    { t: 'Soft lock', d: '"Sopheap reviewing" prevents two Keepers colliding on the same story. Timeout duration is still an open question.' },
+    { t: '⚠ Translation badge', d: 'Set automatically by AI quality score. Also surfaced in the Story Review header.' },
+  ],
+  [
+    { t: 'Side-by-side bilingual transcript', d: 'KH left, EN right. Both editable. Raw originals are preserved — edits tracked separately.' },
+    { t: 'Wavy underline = low confidence', d: 'AI flags paragraphs below the translation confidence threshold so the Keeper knows where to focus.' },
+    { t: 'Two people-tagging systems', d: 'Recorder tags (who the story is about) and AI flags (who is mentioned by name) are kept separate and shown in distinct UI areas.' },
+    { t: '3 decision options only', d: '"Return to narrator" was dropped — too contextually awkward in a family setting. Keepers edit what they have or archive.' },
+  ],
+  [
+    { t: 'Confirmation + link to book', d: 'Keeper sees the story is live and gets a direct link. Narrator is notified automatically.' },
+    { t: 'Queue count persists', d: '"3 remaining" keeps the Keeper aware of the backlog without forcing them back to the queue.' },
+  ],
+];
+
+function render() {
+  const fa = document.getElementById('frame-area');
+  const ag = document.getElementById('ann-grid');
+
+  if (device === 'desktop') {
+    let main = '', bar = '';
+    if (cur === 0) main = dQueue();
+    else if (cur === 1) main = dReview();
+    else main = dPublished();
+    bar = dDecisionBar();
+
+    fa.innerHTML = `
+      <div class="browser" style="position:relative">
+        <div class="browser-bar">
+          <div class="browser-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="url-bar">roeung.app/keeper</div>
+          ${hbBtn(15)}
+        </div>
+        <div class="d-layout">
+          <div class="d-sidebar">
+            <div class="sb-section">Keeper</div>
+            <div class="sb-item${cur===0?' active':''}"><span><i class="ti ti-inbox"></i>Review queue</span><span class="badge">4</span></div>
+            <div class="sb-item"><span><i class="ti ti-books"></i>Family book</span></div>
+            <div class="sb-item"><span><i class="ti ti-users"></i>Family members</span></div>
+            <div class="sb-item"><span><i class="ti ti-layout-list"></i>Chapters</span></div>
+            <div class="sb-div"></div>
+            <div class="sb-item"><span><i class="ti ti-flag"></i>Flagged</span><span class="badge-warn">2</span></div>
+            <div class="sb-keeper"><strong>Ellen Sea</strong>Keeper · USA</div>
+          </div>
+          <div class="d-body">
+            <div class="d-main">${main}</div>
+            ${bar}
+          </div>
+        </div>
+        ${menuOpen ? drawerHTML('queue', true) : ''}
+      </div>`;
+
+    ag.innerHTML = (dAnnotations[cur] || []).map(a =>
+      `<div class="ann-item"><div class="ann-t">${a.t}</div><div class="ann-d">${a.d}</div></div>`).join('');
+
+  } else {
+    let screen = '', bar = '';
+    if (cur === 0) screen = mQueue();
+    else if (cur === 1) screen = mReview();
+    else screen = mPublished();
+    bar = mDecisionBar();
+
+    const notes = mNotes[cur] || [];
+    fa.innerHTML = `
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-label">${['3.1 Review queue','3.2 Story review','3.3 Published'][cur]}</div>
+          <div class="phone-frame" style="position:relative">
+            <div class="m-notch"></div>
+            <div class="m-app-header">
+              <div class="m-app-name">Roeung <span style="font-size:9px;color:var(--text3);font-weight:400;">· Sea family</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><div class="m-app-keeper">Ellen Sea</div>${hbBtn()}</div>
+            </div>
+            <div class="m-screen" style="overflow-y:auto;">${screen}</div>
+            ${bar}
+            ${menuOpen ? drawerHTML('queue', true) : ''}
+          </div>
+        </div>
+        <div class="m-notes">
+          <div class="m-notes-header">Adapts from desktop layout</div>
+          ${notes.map(n => `<div class="m-note"><div class="m-note-t">${n.t}</div><div class="m-note-d">${n.d}</div></div>`).join('')}
+        </div>
+      </div>`;
+
+    ag.innerHTML = (dAnnotations[cur] || []).map(a =>
+      `<div class="ann-item"><div class="ann-t">${a.t}</div><div class="ann-d">${a.d}</div></div>`).join('');
+  }
+}
+
+render();
+</script>
+</body>
+</html>

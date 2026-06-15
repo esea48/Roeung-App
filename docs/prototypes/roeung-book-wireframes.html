@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roeung — Book Reading Wireframes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f7f7;
+  --bg3: #f0f0f0;
+  --text1: #1a1a1a;
+  --text2: #555555;
+  --text3: #999999;
+  --border1: #cccccc;
+  --border2: #e0e0e0;
+  --border3: #eeeeee;
+  --info: #0066cc;
+  --info-bg: #eef4ff;
+  --success: #2d7d2d;
+  --danger: #cc2200;
+  --warn-bg: #faeeda;
+  --warn: #ba7517;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: #e8e8e8; padding: 24px; color: var(--text1); }
+h1 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+
+/* ── Controls ─────────────────────────── */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+.device-toggle { display: flex; border: 1px solid var(--border1); border-radius: 20px; overflow: hidden; background: var(--bg); }
+.dt-btn { font-size: 11px; padding: 5px 14px; cursor: pointer; color: var(--text2); background: transparent; border: none; display: flex; align-items: center; gap: 4px; }
+.dt-btn.active { background: var(--text1); color: var(--bg); }
+.nav-btn { font-size: 11px; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 20px; cursor: pointer; background: var(--bg); color: var(--text2); }
+.nav-btn:hover { background: var(--bg2); }
+.nav-btn.cur { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.sep { font-size: 11px; color: var(--text3); margin: 0 4px; }
+
+/* ── Desktop: browser chrome ──────────── */
+.browser { border: 1.5px solid var(--border1); border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-width: 860px; }
+.browser-bar { background: var(--bg2); padding: 8px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--border3); }
+.browser-dots { display: flex; gap: 5px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); }
+.url-bar { flex: 1; background: var(--bg); border: 0.5px solid var(--border3); border-radius: 6px; padding: 3px 10px; font-size: 10px; color: var(--text3); }
+
+/* Desktop app nav bar */
+.app-nav { display: flex; align-items: center; gap: 10px; padding: 10px 20px; border-bottom: 0.5px solid var(--border3); }
+.app-logo-name { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text1); }
+.app-logo-name span { font-size: 16px; }
+.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); }
+.breadcrumb a { color: var(--info); cursor: pointer; }
+.breadcrumb i { font-size: 10px; }
+.app-nav-right { margin-left: auto; }
+.lang-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: 20px; overflow: hidden; }
+.lt-btn { font-size: 10px; padding: 3px 10px; cursor: pointer; color: var(--text2); background: transparent; border: none; }
+.lt-btn.active { background: var(--text1); color: var(--bg); }
+
+/* Desktop content wrapper */
+.d-content { display: flex; flex-direction: column; min-height: 520px; }
+
+/* ── 4.1 Book Home (desktop) ──────────── */
+.cover-hero { background: var(--bg2); padding: 28px 20px 22px; text-align: center; border-bottom: 0.5px solid var(--border3); }
+.cover-motif { font-size: 30px; margin-bottom: 8px; }
+.cover-family-name { font-size: 22px; font-weight: 600; color: var(--text1); margin-bottom: 3px; letter-spacing: -0.01em; }
+.cover-family-kh { font-size: 12px; color: var(--text3); }
+.section-label { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 10px; }
+.recent-section { padding: 14px 20px; border-bottom: 0.5px solid var(--border3); }
+.recent-row { display: flex; gap: 10px; overflow: hidden; }
+.recent-card { flex-shrink: 0; width: 165px; border: 0.5px solid var(--border3); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.recent-card:hover { border-color: var(--border2); background: var(--bg2); }
+.rc-title { font-size: 11px; font-weight: 500; color: var(--text1); margin-bottom: 3px; line-height: 1.4; }
+.rc-meta { font-size: 9px; color: var(--text3); }
+.chapters-section { padding: 14px 20px; }
+.chapter-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 0.5px solid var(--border3); border-radius: 8px; margin-bottom: 7px; cursor: pointer; }
+.chapter-row:hover { border-color: var(--border2); background: var(--bg2); }
+.chapter-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--bg2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chapter-icon i { font-size: 15px; color: var(--text2); }
+.chapter-name { font-size: 12px; font-weight: 500; color: var(--text1); margin-bottom: 1px; }
+.chapter-meta { font-size: 10px; color: var(--text3); }
+.chapter-chevron { margin-left: auto; font-size: 14px; color: var(--text3); }
+
+/* ── 4.2 Chapter View (desktop) ─────── */
+.chapter-page-header { padding: 14px 20px; border-bottom: 0.5px solid var(--border3); }
+.chapter-page-title { font-size: 17px; font-weight: 600; margin-bottom: 3px; }
+.chapter-page-sub { font-size: 11px; color: var(--text3); }
+.toolbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 20px; border-bottom: 0.5px solid var(--border3); }
+.sort-sel { font-size: 11px; border: 0.5px solid var(--border2); border-radius: 6px; padding: 3px 8px; background: var(--bg); color: var(--text1); }
+.filter-row { display: flex; gap: 6px; }
+.f-chip { font-size: 10px; padding: 3px 9px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--text2); cursor: pointer; }
+.stories-list { padding: 12px 20px; }
+.story-card { border: 0.5px solid var(--border3); border-radius: 8px; padding: 11px 14px; margin-bottom: 7px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; }
+.story-card:hover { border-color: var(--border2); background: var(--bg2); }
+.sc-main { flex: 1; min-width: 0; }
+.sc-title { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+.sc-meta { font-size: 10px; color: var(--text3); }
+.sc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-lang { background: var(--bg2); color: var(--text2); font-weight: 400; }
+.badge-dur { color: var(--text3); font-weight: 400; }
+
+/* ── 4.3 / 4.4 Story Page (desktop) ─── */
+.story-page-header { padding: 16px 20px; border-bottom: 0.5px solid var(--border3); }
+.story-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+.story-byline { font-size: 11px; color: var(--text3); margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+.story-byline strong { color: var(--text2); font-weight: 500; }
+.translation-flag { display: flex; align-items: center; gap: 6px; background: var(--warn-bg); border: 0.5px solid var(--warn); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--warn); }
+.translation-flag i { font-size: 14px; flex-shrink: 0; }
+.story-body { padding: 16px 20px; flex: 1; }
+.bilin-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: 20px; overflow: hidden; width: fit-content; margin-bottom: 16px; }
+.bt-btn { font-size: 10px; padding: 4px 14px; cursor: pointer; color: var(--text2); background: transparent; border: none; }
+.bt-btn.active { background: var(--text1); color: var(--bg); }
+.story-text { font-size: 13px; line-height: 1.9; color: var(--text1); max-width: 640px; }
+.story-para { margin-bottom: 16px; }
+.hl { background: #dceeff; border-radius: 2px; padding: 0 2px; }
+.tags-section { padding: 10px 20px; border-top: 0.5px solid var(--border3); }
+.tags-label { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 7px; }
+.tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag-chip { font-size: 10px; padding: 3px 10px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--info); cursor: pointer; }
+.tag-chip:hover { background: var(--info-bg); }
+
+/* Audio player */
+.audio-player { border-top: 0.5px solid var(--border3); padding: 10px 20px; display: flex; align-items: center; gap: 12px; background: var(--bg2); }
+.play-btn { width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; background: var(--bg); }
+.play-btn.playing { background: var(--text1); border-color: var(--text1); }
+.play-btn i { font-size: 13px; color: var(--text2); }
+.play-btn.playing i { color: var(--bg); }
+.wav-track { flex: 1; height: 28px; display: flex; align-items: center; gap: 1.5px; }
+.wb { border-radius: 1px; background: var(--border3); width: 2.5px; }
+.wb.p { background: var(--text1); }
+.pt { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.spd-ctrl { display: flex; gap: 4px; }
+.spd-btn { font-size: 9px; padding: 2px 7px; border: 0.5px solid var(--border2); border-radius: 4px; color: var(--text2); cursor: pointer; background: var(--bg); }
+.spd-btn.active { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+
+/* Story prev/next */
+.story-nav { display: flex; align-items: center; justify-content: space-between; padding: 9px 20px; border-top: 0.5px solid var(--border3); }
+.snav-btn { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--info); cursor: pointer; }
+.snav-btn i { font-size: 14px; }
+.snav-cur { font-size: 10px; color: var(--text3); }
+
+/* ── Mobile: phone frame ─────────────── */
+.phone { width: 270px; flex-shrink: 0; }
+.phone-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; text-align: center; }
+.phone-frame { border: 2px solid #333; border-radius: 36px; background: var(--bg); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.m-notch { width: 72px; height: 18px; background: #333; border-radius: 0 0 10px 10px; margin: 0 auto; }
+.m-screen { min-height: 560px; display: flex; flex-direction: column; }
+
+/* Mobile app nav */
+.m-app-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 0.5px solid var(--border3); }
+.m-app-name { font-size: 11px; font-weight: 600; color: var(--text1); display: flex; align-items: center; gap: 4px; }
+.m-lang-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: 20px; overflow: hidden; }
+.m-lt-btn { font-size: 9px; padding: 2px 8px; cursor: pointer; color: var(--text2); background: transparent; border: none; }
+.m-lt-btn.active { background: var(--text1); color: var(--bg); }
+.m-back-nav { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-bottom: 0.5px solid var(--border3); }
+.m-back { font-size: 11px; color: var(--info); display: flex; align-items: center; gap: 3px; cursor: pointer; }
+.m-back i { font-size: 12px; }
+.m-page-title { font-size: 11px; font-weight: 600; margin: 0 auto; padding-right: 40px; }
+
+/* Mobile 4.1 */
+.m-cover-hero { background: var(--bg2); padding: 18px 14px 14px; text-align: center; border-bottom: 0.5px solid var(--border3); }
+.m-cover-motif { font-size: 22px; margin-bottom: 5px; }
+.m-cover-name { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 2px; }
+.m-cover-kh { font-size: 10px; color: var(--text3); }
+.m-section-label { font-size: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 7px; }
+.m-recent-section { padding: 8px 12px; border-bottom: 0.5px solid var(--border3); }
+.m-recent-row { display: flex; gap: 7px; overflow: hidden; }
+.m-recent-card { flex-shrink: 0; width: 118px; border: 0.5px solid var(--border3); border-radius: 6px; padding: 7px 9px; }
+.m-rc-title { font-size: 9px; font-weight: 500; color: var(--text1); margin-bottom: 2px; line-height: 1.4; }
+.m-rc-meta { font-size: 8px; color: var(--text3); }
+.m-chapters-section { padding: 8px 12px; }
+.m-chapter-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 0.5px solid var(--border3); border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
+.m-chapter-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.m-chapter-name { font-size: 10px; font-weight: 500; color: var(--text1); margin-bottom: 1px; }
+.m-chapter-meta { font-size: 8px; color: var(--text3); }
+
+/* Mobile 4.2 */
+.m-sort-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-bottom: 0.5px solid var(--border3); }
+.m-sort-label { font-size: 9px; color: var(--text3); }
+.m-sort-sel { font-size: 9px; border: 0.5px solid var(--border2); border-radius: 4px; padding: 2px 5px; background: var(--bg); color: var(--text1); }
+.m-story-list { padding: 8px 12px; }
+.m-story-card { border: 0.5px solid var(--border3); border-radius: 6px; padding: 8px 10px; margin-bottom: 5px; cursor: pointer; }
+.m-story-card:hover { background: var(--bg2); }
+.m-sc-title { font-size: 10px; font-weight: 500; margin-bottom: 2px; }
+.m-sc-meta { font-size: 8px; color: var(--text3); }
+.m-sc-badges { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.m-badge { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 500; }
+.m-badge-warn { background: var(--warn-bg); color: var(--warn); }
+.m-badge-lang { background: var(--bg2); color: var(--text2); font-weight: 400; }
+
+/* Mobile 4.3 / 4.4 */
+.m-story-header { padding: 10px 12px; border-bottom: 0.5px solid var(--border3); }
+.m-story-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+.m-story-byline { font-size: 9px; color: var(--text3); margin-bottom: 7px; }
+.m-story-byline strong { color: var(--text2); font-weight: 500; }
+.m-translation-flag { display: flex; align-items: center; gap: 5px; background: var(--warn-bg); border: 0.5px solid var(--warn); border-radius: 5px; padding: 5px 8px; font-size: 9px; color: var(--warn); }
+.m-translation-flag i { font-size: 12px; flex-shrink: 0; }
+.m-story-body { padding: 10px 12px; flex: 1; }
+.m-bilin-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: 20px; overflow: hidden; margin-bottom: 10px; }
+.m-bt-btn { flex: 1; font-size: 9px; padding: 3px 0; cursor: pointer; color: var(--text2); background: transparent; border: none; text-align: center; }
+.m-bt-btn.active { background: var(--text1); color: var(--bg); }
+.m-story-text { font-size: 11px; line-height: 1.8; color: var(--text1); }
+.m-story-para { margin-bottom: 10px; }
+.m-tags-section { padding: 7px 12px; border-top: 0.5px solid var(--border3); }
+.m-tags-label { font-size: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 5px; }
+.m-tags-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.m-tag-chip { font-size: 9px; padding: 2px 8px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--info); cursor: pointer; }
+
+/* Mobile audio player */
+.m-audio-player { border-top: 0.5px solid var(--border3); padding: 8px 12px; display: flex; align-items: center; gap: 8px; background: var(--bg2); }
+.m-play-btn { width: 26px; height: 26px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; background: var(--bg); }
+.m-play-btn.playing { background: var(--text1); border-color: var(--text1); }
+.m-play-btn i { font-size: 11px; color: var(--text2); }
+.m-play-btn.playing i { color: var(--bg); }
+.m-wav-track { flex: 1; height: 22px; display: flex; align-items: center; gap: 1px; }
+.m-wb { border-radius: 1px; background: var(--border3); width: 2px; }
+.m-wb.p { background: var(--text1); }
+.m-pt { font-size: 9px; color: var(--text3); flex-shrink: 0; }
+.m-spd-btn { font-size: 8px; padding: 2px 6px; border: 0.5px solid var(--border2); border-radius: 3px; color: var(--text2); cursor: pointer; background: var(--bg); }
+.m-spd-btn.active { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+
+/* Mobile story nav */
+.m-story-nav { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; border-top: 0.5px solid var(--border3); }
+.m-snav-btn { font-size: 10px; color: var(--info); cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.m-snav-btn i { font-size: 12px; }
+.m-snav-cur { font-size: 9px; color: var(--text3); }
+
+/* Mobile 4.5 Record Yours CTA */
+.record-cta { border-top: 1.5px solid var(--border2); padding: 12px; background: var(--bg); }
+.cta-header { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+.cta-body { font-size: 10px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.cta-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.cta-tag { font-size: 9px; padding: 2px 7px; border: 0.5px solid var(--border2); border-radius: 20px; color: var(--text2); background: var(--bg2); }
+.cta-btn { display: block; width: 100%; padding: 10px; background: var(--text1); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; text-align: center; margin-bottom: 4px; }
+.cta-dismiss { font-size: 10px; color: var(--text3); text-align: center; cursor: pointer; padding: 5px; display: block; }
+
+/* Annotations */
+.ann-section { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border2); }
+.ann-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 12px; }
+.ann-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.ann-item { flex: 1; min-width: 200px; padding-left: 10px; border-left: 2px solid var(--border2); }
+.ann-t { font-size: 12px; font-weight: 500; color: var(--text1); margin-bottom: 3px; }
+.ann-d { font-size: 11px; color: var(--text2); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Roeung (រឿង) — Book Reading Wireframes</h1>
+<p class="subtitle">Sea family · Ellen Sea · Phase 1 MVP · Desktop + Mobile · Version 0.1</p>
+
+<div class="controls">
+  <div class="device-toggle">
+    <button class="dt-btn active" id="dt-desk" onclick="setDevice('desktop')"><i class="ti ti-device-desktop"></i> Desktop</button>
+    <button class="dt-btn" id="dt-mob" onclick="setDevice('mobile')"><i class="ti ti-device-mobile"></i> Mobile</button>
+  </div>
+  <span class="sep">|</span>
+  <button class="nav-btn cur" onclick="goTo(1)">4.1 Book Home</button>
+  <button class="nav-btn" onclick="goTo(2)">4.2 Chapter View</button>
+  <button class="nav-btn" onclick="goTo(3)">4.3 Story Page</button>
+  <button class="nav-btn" onclick="goTo(4)">4.4 Listen Mode</button>
+  <button class="nav-btn" id="nav-cta" onclick="goTo(5)">4.5 Record Yours</button>
+</div>
+
+<div id="screen-area"></div>
+
+<div class="ann-section">
+  <div class="ann-title">Annotations</div>
+  <div class="ann-grid" id="ann-grid"></div>
+</div>
+
+<script>
+let device = 'desktop';
+let scr = 1;
+let menuOpen = false;
+
+function setDevice(d) {
+  device = d;
+  document.getElementById('dt-desk').className = 'dt-btn' + (d === 'desktop' ? ' active' : '');
+  document.getElementById('dt-mob').className = 'dt-btn' + (d === 'mobile' ? ' active' : '');
+  render();
+}
+
+function goTo(s) {
+  scr = s; menuOpen = false;
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.className = 'nav-btn' + ((i + 1) === s ? ' cur' : '');
+  });
+  render();
+}
+
+function toggleMenu() { menuOpen = !menuOpen; render(); }
+
+function hbBtn(sz) {
+  return `<button onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0"><i class="ti ti-menu-2" style="font-size:${sz||15}px;color:var(--text2)"></i></button>`;
+}
+
+function drawerHTML(act, showQueue) {
+  const items = [{key:'book',icon:'ti-book',label:'The Book'},{key:'record',icon:'ti-microphone',label:'Record a Story'},...(showQueue?[{key:'queue',icon:'ti-inbox',label:'Review Queue'}]:[])];
+  return `<div onclick="toggleMenu()" style="position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:50;cursor:pointer"></div><div style="position:absolute;top:0;right:0;bottom:0;width:72%;max-width:240px;background:var(--bg);z-index:51;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,0.12)"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:0.5px solid var(--border3)"><div style="font-size:12px;font-weight:600;color:var(--text1)">❧ The Sea Family</div><button onclick="toggleMenu()" style="background:none;border:none;font-size:18px;color:var(--text2);cursor:pointer;line-height:1;padding:0">×</button></div><nav style="padding:6px;flex:1">${items.map(a=>`<div onclick="toggleMenu()" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:12px;color:${a.key===act?'var(--text1)':'var(--text2)'};font-weight:${a.key===act?500:400};background:${a.key===act?'var(--bg2)':'transparent'};cursor:pointer;margin-bottom:2px"><i class="ti ${a.icon}" style="font-size:15px"></i>${a.label}</div>`).join('')}</nav><div style="padding:12px 14px;border-top:0.5px solid var(--border3)"><div style="font-size:10px;color:var(--text3);margin-bottom:6px">Language</div><div style="display:flex;border:0.5px solid var(--border2);border-radius:20px;overflow:hidden;width:fit-content"><button style="font-size:10px;padding:3px 10px;background:var(--text1);color:var(--bg);border:none;cursor:pointer">EN</button><button style="font-size:10px;padding:3px 10px;background:transparent;color:var(--text2);border:none;cursor:pointer">KH</button></div></div></div>`;
+}
+
+function wavBars(n, frac) {
+  const h = [8,14,22,16,28,20,18,26,10,30,24,14,20,12,26,8,22,18,28,12,20,24,16,18,22,10,26,20,12,16,24,8,18,22,14,28,16,20,10,24,18,12,26,8,20,16,22,14,28,10,18,24,16,22,12,20,26,8,14,22,18,28,10,16,24,20,12,26,14,18,22,8,20,16,28,12,24,18,10,26];
+  return h.slice(0,n).map((v,i) => `<div class="${i/n < frac ? 'wb p' : 'wb'}" style="height:${v}px"></div>`).join('');
+}
+
+function mWavBars(n, frac) {
+  const h = [6,10,14,10,18,13,11,16,7,19,15,9,13,9,17,7,13,11,17,9,13,15,9,13,15,7,17,12,9,11,15,7,11,15,9,17,11,13,7,15,11,9,16,7,12,10,14,9,17,7,11,15,10,14,9,12,16,6,9,13];
+  return h.slice(0,n).map((v,i) => `<div class="${i/n < frac ? 'm-wb p' : 'm-wb'}" style="height:${v}px"></div>`).join('');
+}
+
+function render() {
+  document.getElementById('screen-area').innerHTML = device === 'desktop' ? renderDesktop() : renderMobile();
+  document.getElementById('ann-grid').innerHTML = renderAnnotations();
+}
+
+// ── Desktop ────────────────────────────────────────────────────────────
+
+function browserChrome(url, inner) {
+  return `<div class="browser" style="position:relative">
+  <div class="browser-bar">
+    <div class="browser-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="url-bar">roeung.family/${url}</div>
+  </div>
+  ${inner}
+  ${menuOpen ? drawerHTML('book', false) : ''}
+</div>`;
+}
+
+function dAppNav(crumb) {
+  return `<div class="app-nav">
+  <div class="app-logo-name"><span>❧</span> The Sea Family</div>
+  ${crumb ? `<div class="breadcrumb"><i class="ti ti-chevron-right"></i>${crumb}</div>` : ''}
+  <div class="app-nav-right" style="display:flex;align-items:center;gap:8px">
+    <div class="lang-toggle"><button class="lt-btn active">EN</button><button class="lt-btn">KH</button></div>
+    ${hbBtn(16)}
+  </div>
+</div>`;
+}
+
+function renderDesktop() {
+  switch(scr) {
+    case 1: return dBookHome();
+    case 2: return dChapterView();
+    case 3: return dStoryPage(false);
+    case 4: return dStoryPage(true);
+    case 5: return dRecordYours();
+  }
+}
+
+function dBookHome() {
+  return browserChrome('', `
+${dAppNav('')}
+<div class="d-content">
+  <div class="cover-hero">
+    <div class="cover-motif">❧</div>
+    <div class="cover-family-name">The Sea Family</div>
+    <div class="cover-family-kh">ក្រុមគ្រួសាររបស់យើង</div>
+  </div>
+  <div class="recent-section">
+    <div class="section-label">Recently added</div>
+    <div class="recent-row">
+      <div class="recent-card"><div class="rc-title">The Flood of '79</div><div class="rc-meta">Grandfather Sok · 14 min · KH</div></div>
+      <div class="recent-card"><div class="rc-title">Mum's first day in Germany</div><div class="rc-meta">Mum · 8 min · EN</div></div>
+      <div class="recent-card"><div class="rc-title">How we got to Phnom Penh</div><div class="rc-meta">Uncle Rith · 22 min · KH</div></div>
+      <div class="recent-card"><div class="rc-title">The day Apsara was born</div><div class="rc-meta">Dad · 11 min · EN/KH</div></div>
+    </div>
+  </div>
+  <div class="chapters-section">
+    <div class="section-label">Chapters</div>
+    <div class="chapter-row">
+      <div class="chapter-icon"><i class="ti ti-book"></i></div>
+      <div><div class="chapter-name">Life Before the War</div><div class="chapter-meta">12 stories</div></div>
+      <i class="ti ti-chevron-right chapter-chevron"></i>
+    </div>
+    <div class="chapter-row">
+      <div class="chapter-icon"><i class="ti ti-book"></i></div>
+      <div><div class="chapter-name">The Khmer Rouge Period</div><div class="chapter-meta">8 stories</div></div>
+      <i class="ti ti-chevron-right chapter-chevron"></i>
+    </div>
+    <div class="chapter-row">
+      <div class="chapter-icon"><i class="ti ti-book"></i></div>
+      <div><div class="chapter-name">Migration &amp; Resettlement</div><div class="chapter-meta">15 stories</div></div>
+      <i class="ti ti-chevron-right chapter-chevron"></i>
+    </div>
+    <div class="chapter-row" style="opacity:0.55">
+      <div class="chapter-icon"><i class="ti ti-archive"></i></div>
+      <div><div class="chapter-name">Uncategorised</div><div class="chapter-meta">3 stories — not yet assigned to a chapter</div></div>
+      <i class="ti ti-chevron-right chapter-chevron"></i>
+    </div>
+  </div>
+</div>`);
+}
+
+function dChapterView() {
+  return browserChrome('chapter/life-before-the-war', `
+${dAppNav('<a>Home</a> <i class="ti ti-chevron-right"></i> Life Before the War')}
+<div class="d-content">
+  <div class="chapter-page-header">
+    <div class="chapter-page-title">Life Before the War</div>
+    <div class="chapter-page-sub">12 stories · spanning 1940s–1970s</div>
+  </div>
+  <div class="toolbar">
+    <div class="filter-row">
+      <span style="font-size:10px;color:var(--text3);margin-right:2px">Sort:</span>
+      <select class="sort-sel"><option>Newest first</option><option>Narrative chronology</option></select>
+    </div>
+    <div class="filter-row">
+      <span class="f-chip">All narrators</span>
+      <span class="f-chip">All languages</span>
+    </div>
+  </div>
+  <div class="stories-list">
+    <div class="story-card">
+      <div class="sc-main"><div class="sc-title">The Flood of '79</div><div class="sc-meta">Grandfather Sok · added 12 Jun 2026</div></div>
+      <div class="sc-right"><span class="badge badge-lang">KH</span><span class="badge badge-dur">14:02</span></div>
+    </div>
+    <div class="story-card">
+      <div class="sc-main"><div class="sc-title">How Grandma and Grandpa met</div><div class="sc-meta">Uncle Rith · added 10 Jun 2026</div></div>
+      <div class="sc-right"><span class="badge badge-warn">⚠ Translation approximate</span><span class="badge badge-lang">KH</span><span class="badge badge-dur">18:24</span></div>
+    </div>
+    <div class="story-card">
+      <div class="sc-main"><div class="sc-title">The market on Street 63</div><div class="sc-meta">Mum · added 5 Jun 2026</div></div>
+      <div class="sc-right"><span class="badge badge-lang">EN</span><span class="badge badge-dur">9:11</span></div>
+    </div>
+    <div class="story-card">
+      <div class="sc-main"><div class="sc-title">Rice harvest in Prey Veng</div><div class="sc-meta">Grandfather Sok · added 1 Jun 2026</div></div>
+      <div class="sc-right"><span class="badge badge-warn">⚠ Translation approximate</span><span class="badge badge-lang">KH</span><span class="badge badge-dur">22:07</span></div>
+    </div>
+    <div class="story-card" style="opacity:0.55">
+      <div class="sc-main"><div class="sc-title">Playing by the river as children</div><div class="sc-meta">Aunt Maly · added 28 May 2026</div></div>
+      <div class="sc-right"><span class="badge badge-lang">KH</span><span class="badge badge-dur">7:44</span></div>
+    </div>
+  </div>
+</div>`);
+}
+
+function dStoryPage(listening) {
+  const para2 = listening
+    ? `<span class="hl">We ran to the stilt house at the edge of the village,</span> the children already half-asleep on their mats. Your great-grandmother carried the youngest on her back the whole time. She never made a sound.`
+    : `We ran to the stilt house at the edge of the village, the children already half-asleep on their mats. Your great-grandmother carried the youngest on her back the whole time. She never made a sound.`;
+
+  return browserChrome(`chapter/life-before-the-war/the-flood-of-79`, `
+${dAppNav('<a>Home</a> <i class="ti ti-chevron-right"></i> <a>Life Before the War</a> <i class="ti ti-chevron-right"></i> The Flood of \'79')}
+<div class="d-content">
+  <div class="story-page-header">
+    <div class="story-title">The Flood of '79</div>
+    <div class="story-byline">
+      <span>Narrated by <strong>Grandfather Sok</strong></span>
+      <span>·</span><span>Recorded June 2026</span>
+      <span>·</span><span>14 min</span>
+    </div>
+    <div class="translation-flag">
+      <i class="ti ti-alert-triangle"></i>
+      This translation may not capture all nuances of the original Khmer
+    </div>
+  </div>
+  <div class="story-body">
+    <div class="bilin-toggle">
+      <button class="bt-btn active">EN</button>
+      <button class="bt-btn">KH</button>
+    </div>
+    <div class="story-text">
+      <div class="story-para">I remember the water came all at once, without warning. It was early morning — before the market opened — and the river had been high for three days, but no one thought it would break.</div>
+      <div class="story-para">${para2}</div>
+      <div class="story-para">The water came up to here — <em>gestures to chest</em> — inside the house. We lost the rice stores. Everything we had put aside for the dry season. But we didn't lose anyone, and that was the only thing that mattered.</div>
+    </div>
+  </div>
+  <div class="tags-section">
+    <div class="tags-label">People in this story</div>
+    <div class="tags-row">
+      <span class="tag-chip">Grandfather Sok</span>
+      <span class="tag-chip">Great-grandmother</span>
+      <span class="tag-chip">Uncle Rith</span>
+    </div>
+  </div>
+  <div class="audio-player">
+    <div class="play-btn${listening ? ' playing' : ''}"><i class="ti ti-player-${listening ? 'pause' : 'play'}"></i></div>
+    <div class="wav-track">${wavBars(80, listening ? 0.28 : 0)}</div>
+    <span class="pt">${listening ? '3:54' : '0:00'} / 14:02</span>
+    <div class="spd-ctrl">
+      <button class="spd-btn">0.75×</button>
+      <button class="spd-btn active">1×</button>
+      <button class="spd-btn">1.25×</button>
+    </div>
+  </div>
+  <div class="story-nav">
+    <span class="snav-btn"><i class="ti ti-arrow-left"></i> Prev story</span>
+    <span class="snav-cur">2 of 12 in Life Before the War</span>
+    <span class="snav-btn">Next story <i class="ti ti-arrow-right"></i></span>
+  </div>
+</div>`);
+}
+
+function dRecordYours() {
+  return `<div style="background:var(--bg2);padding:36px 24px;text-align:center;border-radius:12px;border:1px dashed var(--border2);max-width:860px">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7">
+    <strong style="color:var(--text1);display:block;margin-bottom:6px">4.5 Record Yours — mobile only</strong>
+    This CTA surfaces at the bottom of the Story Page on mobile, after the reader has scrolled through the story.<br>
+    It does not appear on desktop (recording is a mobile-only flow).<br><br>
+    Switch to <strong>Mobile</strong> view above to see this screen.
+  </p>
+</div>`;
+}
+
+// ── Mobile ─────────────────────────────────────────────────────────────
+
+function phoneWrap(inner) {
+  return `<div class="phone">
+  <div class="phone-frame" style="position:relative">
+    <div class="m-notch"></div>
+    <div class="m-screen">${inner}</div>
+    ${menuOpen ? drawerHTML('book', false) : ''}
+  </div>
+</div>`;
+}
+
+function renderMobile() {
+  switch(scr) {
+    case 1: return phoneWrap(mBookHome());
+    case 2: return phoneWrap(mChapterView());
+    case 3: return phoneWrap(mStoryPage(false));
+    case 4: return phoneWrap(mStoryPage(true));
+    case 5: return phoneWrap(mRecordYours());
+  }
+}
+
+function mBookHome() {
+  return `
+<div class="m-app-nav">
+  <span class="m-app-name"><span>❧</span> The Sea Family</span>
+  <div style="display:flex;align-items:center;gap:6px"><div class="m-lang-toggle"><button class="m-lt-btn active">EN</button><button class="m-lt-btn">KH</button></div>${hbBtn()}</div>
+</div>
+<div class="m-cover-hero">
+  <div class="m-cover-motif">❧</div>
+  <div class="m-cover-name">The Sea Family</div>
+  <div class="m-cover-kh">ក្រុមគ្រួសាររបស់យើង</div>
+</div>
+<div class="m-recent-section">
+  <div class="m-section-label">Recently added</div>
+  <div class="m-recent-row">
+    <div class="m-recent-card"><div class="m-rc-title">The Flood of '79</div><div class="m-rc-meta">Grandfather Sok · 14 min</div></div>
+    <div class="m-recent-card"><div class="m-rc-title">Mum's first day in Germany</div><div class="m-rc-meta">Mum · 8 min</div></div>
+    <div class="m-recent-card"><div class="m-rc-title">How we got to Phnom Penh</div><div class="m-rc-meta">Uncle Rith · 22 min</div></div>
+  </div>
+</div>
+<div class="m-chapters-section">
+  <div class="m-section-label">Chapters</div>
+  <div class="m-chapter-row">
+    <div class="m-chapter-dot"></div>
+    <div><div class="m-chapter-name">Life Before the War</div><div class="m-chapter-meta">12 stories</div></div>
+    <i class="ti ti-chevron-right" style="margin-left:auto;font-size:12px;color:var(--text3)"></i>
+  </div>
+  <div class="m-chapter-row">
+    <div class="m-chapter-dot"></div>
+    <div><div class="m-chapter-name">The Khmer Rouge Period</div><div class="m-chapter-meta">8 stories</div></div>
+    <i class="ti ti-chevron-right" style="margin-left:auto;font-size:12px;color:var(--text3)"></i>
+  </div>
+  <div class="m-chapter-row">
+    <div class="m-chapter-dot"></div>
+    <div><div class="m-chapter-name">Migration &amp; Resettlement</div><div class="m-chapter-meta">15 stories</div></div>
+    <i class="ti ti-chevron-right" style="margin-left:auto;font-size:12px;color:var(--text3)"></i>
+  </div>
+  <div class="m-chapter-row" style="opacity:0.55">
+    <div class="m-chapter-dot" style="background:var(--border3)"></div>
+    <div><div class="m-chapter-name">Uncategorised</div><div class="m-chapter-meta">3 stories</div></div>
+    <i class="ti ti-chevron-right" style="margin-left:auto;font-size:12px;color:var(--text3)"></i>
+  </div>
+</div>`;
+}
+
+function mChapterView() {
+  return `
+<div class="m-app-nav">
+  <span class="m-app-name"><span>❧</span> The Sea Family</span>
+  <div style="display:flex;align-items:center;gap:6px"><div class="m-lang-toggle"><button class="m-lt-btn active">EN</button><button class="m-lt-btn">KH</button></div>${hbBtn()}</div>
+</div>
+<div class="m-back-nav">
+  <span class="m-back"><i class="ti ti-arrow-left"></i> Home</span>
+  <span class="m-page-title">Life Before the War</span>
+</div>
+<div class="m-sort-row">
+  <span class="m-sort-label">12 stories</span>
+  <select class="m-sort-sel"><option>Newest first</option><option>Chronological</option></select>
+</div>
+<div class="m-story-list">
+  <div class="m-story-card">
+    <div class="m-sc-title">The Flood of '79</div>
+    <div class="m-sc-meta">Grandfather Sok · 14:02 · Jun 2026</div>
+    <div class="m-sc-badges"><span class="m-badge m-badge-lang">KH</span></div>
+  </div>
+  <div class="m-story-card">
+    <div class="m-sc-title">How Grandma and Grandpa met</div>
+    <div class="m-sc-meta">Uncle Rith · 18:24 · Jun 2026</div>
+    <div class="m-sc-badges"><span class="m-badge m-badge-warn">⚠ Translation approx.</span><span class="m-badge m-badge-lang">KH</span></div>
+  </div>
+  <div class="m-story-card">
+    <div class="m-sc-title">The market on Street 63</div>
+    <div class="m-sc-meta">Mum · 9:11 · Jun 2026</div>
+    <div class="m-sc-badges"><span class="m-badge m-badge-lang">EN</span></div>
+  </div>
+  <div class="m-story-card">
+    <div class="m-sc-title">Rice harvest in Prey Veng</div>
+    <div class="m-sc-meta">Grandfather Sok · 22:07 · Jun 2026</div>
+    <div class="m-sc-badges"><span class="m-badge m-badge-warn">⚠ Translation approx.</span><span class="m-badge m-badge-lang">KH</span></div>
+  </div>
+</div>`;
+}
+
+function mStoryPage(listening) {
+  const para2 = listening
+    ? `<span class="hl">We ran to the stilt house at the edge of the village,</span> the children already half-asleep on their mats. Your great-grandmother carried the youngest on her back the whole time. She never made a sound.`
+    : `We ran to the stilt house at the edge of the village, the children already half-asleep on their mats. Your great-grandmother carried the youngest on her back the whole time. She never made a sound.`;
+
+  return `
+<div class="m-app-nav">
+  <span class="m-back"><i class="ti ti-arrow-left"></i> Chapter</span>
+  <div style="display:flex;align-items:center;gap:6px"><div class="m-lang-toggle"><button class="m-lt-btn active">EN</button><button class="m-lt-btn">KH</button></div>${hbBtn()}</div>
+</div>
+<div class="m-story-header">
+  <div class="m-story-title">The Flood of '79</div>
+  <div class="m-story-byline">Narrated by <strong>Grandfather Sok</strong> · June 2026 · 14 min</div>
+  <div class="m-translation-flag">
+    <i class="ti ti-alert-triangle"></i>
+    <span>Translation may not capture all nuances</span>
+  </div>
+</div>
+<div class="m-story-body">
+  <div class="m-bilin-toggle">
+    <button class="m-bt-btn active">EN</button>
+    <button class="m-bt-btn">KH</button>
+  </div>
+  <div class="m-story-text">
+    <div class="m-story-para">I remember the water came all at once, without warning. It was early morning — before the market opened — and the river had been high for three days.</div>
+    <div class="m-story-para">${para2}</div>
+    <div class="m-story-para">The water came up to here — <em>gestures to chest</em> — inside the house. We lost the rice stores. But we didn't lose anyone, and that was the only thing that mattered.</div>
+  </div>
+</div>
+<div class="m-tags-section">
+  <div class="m-tags-label">People</div>
+  <div class="m-tags-row">
+    <span class="m-tag-chip">Grandfather Sok</span>
+    <span class="m-tag-chip">Great-grandmother</span>
+  </div>
+</div>
+${!listening ? `<div class="record-cta">
+  <div class="cta-header">Do you have a memory like this?</div>
+  <div class="cta-body">Share your own story — your voice matters too.</div>
+  <div class="cta-tags">
+    <span class="cta-tag">Grandfather Sok</span>
+    <span class="cta-tag">Prey Veng</span>
+    <span class="cta-tag">1979</span>
+  </div>
+  <button class="cta-btn"><i class="ti ti-microphone" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i> Record a story</button>
+  <span class="cta-dismiss">Not now</span>
+</div>` : ''}
+<div class="m-audio-player">
+  <div class="m-play-btn${listening ? ' playing' : ''}"><i class="ti ti-player-${listening ? 'pause' : 'play'}"></i></div>
+  <div class="m-wav-track">${mWavBars(50, listening ? 0.28 : 0)}</div>
+  <span class="m-pt">${listening ? '3:54' : '0:00'} / 14:02</span>
+  <button class="m-spd-btn${listening ? ' active' : ''}">1×</button>
+</div>
+<div class="m-story-nav">
+  <span class="m-snav-btn"><i class="ti ti-arrow-left"></i> Prev</span>
+  <span class="m-snav-cur">2 of 12</span>
+  <span class="m-snav-btn">Next <i class="ti ti-arrow-right"></i></span>
+</div>`;
+}
+
+function mRecordYours() {
+  return `
+<div class="m-app-nav">
+  <span class="m-back"><i class="ti ti-arrow-left"></i> Story</span>
+  ${hbBtn()}
+</div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center">
+  <div style="width:52px;height:52px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+    <i class="ti ti-microphone" style="font-size:24px;color:var(--text2)"></i>
+  </div>
+  <div style="font-size:14px;font-weight:600;margin-bottom:8px">Do you have a memory like this?</div>
+  <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:16px">After reading <em>The Flood of '79</em>, share your own memory from this time. Your voice matters too.</div>
+  <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+    <span style="font-size:9px;padding:2px 8px;border:0.5px solid var(--border2);border-radius:20px;color:var(--text2);background:var(--bg2)">Grandfather Sok</span>
+    <span style="font-size:9px;padding:2px 8px;border:0.5px solid var(--border2);border-radius:20px;color:var(--text2);background:var(--bg2)">Prey Veng</span>
+    <span style="font-size:9px;padding:2px 8px;border:0.5px solid var(--border2);border-radius:20px;color:var(--text2);background:var(--bg2)">1979</span>
+  </div>
+  <button style="display:block;width:100%;max-width:200px;padding:11px;background:var(--text1);color:var(--bg);border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;margin:0 auto 10px">
+    <i class="ti ti-microphone" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i> Record a story
+  </button>
+  <span style="font-size:11px;color:var(--text3);cursor:pointer">Not now</span>
+</div>`;
+}
+
+// ── Annotations ─────────────────────────────────────────────────────────
+
+const ANNOTATIONS = {
+  1: [
+    { t: 'Cover hero', d: 'Decorative landing with family name in EN and KH. Scaled down on mobile but keeps the same hierarchy. Acts as the "book cover" before chapters.' },
+    { t: 'EN / KH toggle', d: 'Global language toggle. On desktop: top-right of app nav bar. On mobile: compact pill in the app header. Persists for the session and controls UI labels and default story text language.' },
+    { t: 'Recently added strip', d: 'Horizontally scrollable story mini-cards showing title, narrator, and duration. Helps returning readers spot new stories without scrolling through all chapters. Cards scroll off-screen indicating more.' },
+    { t: 'Uncategorised chapter', d: 'Shown at lower opacity — stories published by Keepers without a chapter assignment. Still readable; Keepers can move them to a chapter anytime.' },
+  ],
+  2: [
+    { t: 'Chapter breadcrumb', d: 'Home → Chapter name on desktop (clickable). Back button on mobile. Both return to Book Home.' },
+    { t: '⚠ Translation approximate badge', d: 'Set by Keeper during review. Visible on story cards before the reader opens the story — sets expectations upfront. Full explanation shown inside the story.' },
+    { t: 'Sort: newest vs. narrative chronology', d: '"Newest first" is the default. Keepers can set a narrative chronology order so the chapter reads as a timeline — e.g. Life Before the War flows 1940s → 1970s.' },
+    { t: 'Language badge', d: 'Shows the original recording language (KH / EN / EN+KH). Separate from the reader\'s EN/KH display toggle.' },
+  ],
+  3: [
+    { t: 'Bilingual toggle (toggle-only)', d: 'EN/KH chip above the story text — same on both desktop and mobile. Chosen for readability: full-width text in one language rather than two narrow columns. Readers switch with one tap.' },
+    { t: 'Audio player — docked at bottom', d: 'Always present at the foot of the story, paused by default. Tap play to enter Listen Mode (4.4) in-place — no navigation away from the text.' },
+    { t: 'Translation quality flag', d: 'Shown below the story header when Keeper flagged the story. Exact wording: "This translation may not capture all nuances of the original Khmer." Amber, not red — informative not alarming.' },
+    { t: 'People tags', d: 'Names set by Keeper during review. Each tag links to a filtered view of stories mentioning that person — threads the same person across different narrators and chapters.' },
+    { t: 'Prev / Next navigation', d: 'Navigates within the current chapter in the active sort order. Counter shows position (e.g. "2 of 12 in Life Before the War").' },
+  ],
+  4: [
+    { t: 'Sentence-level highlight (Listen Mode)', d: 'As audio plays, the sentence currently being spoken highlights in light blue. Works in whatever language text is currently displayed — reader can follow EN text while hearing KH audio.' },
+    { t: 'Playback speed controls', d: '0.75× / 1× / 1.25×. Shown on desktop; a single "1×" speed button on mobile taps to cycle. Useful for elderly narrators speaking fast Khmer, or for non-native listeners.' },
+    { t: 'Record Yours CTA hidden during listen', d: 'The "Do you have a memory like this?" prompt is hidden while audio is playing — it would compete for attention. It reappears after the reader pauses or scrolls past the player.' },
+  ],
+  5: [
+    { t: 'Record Yours — mobile only', d: 'Recording is a mobile-only flow, so this CTA only surfaces on mobile. It appears at the bottom of the story page on mobile (visible in 4.3 view) or as a focused standalone screen after reading.' },
+    { t: 'Pre-filled tags', d: 'The prompt carries the same people tags as the story just read (Grandfather Sok, Prey Veng, 1979). Pre-filling lowers friction and helps the Keeper connect related recordings during review.' },
+    { t: 'Deep link to Capture flow', d: 'Tapping "Record a story" opens Flow 1 (Capture) at screen 1.1 or directly at 1.2 Consent if the family link is already known. Tags are passed as URL params and pre-selected in 1.4 Quick Tag.' },
+    { t: '"Not now" dismiss', d: 'Soft dismiss — no confirmation needed. The CTA may resurface on a future visit. No persistent opt-out in Phase 1.' },
+  ],
+};
+
+function renderAnnotations() {
+  return (ANNOTATIONS[scr] || []).map(a =>
+    `<div class="ann-item"><div class="ann-t">${a.t}</div><div class="ann-d">${a.d}</div></div>`
+  ).join('');
+}
+
+render();
+</script>
+</body>
+</html>

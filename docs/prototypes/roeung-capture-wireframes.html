@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roeung — Capture Flow Wireframes</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f7f7;
+  --bg3: #f0f0f0;
+  --text1: #1a1a1a;
+  --text2: #555555;
+  --text3: #999999;
+  --border1: #cccccc;
+  --border2: #e0e0e0;
+  --border3: #eeeeee;
+  --info: #0066cc;
+  --info-bg: #eef4ff;
+  --success: #2d7d2d;
+  --danger: #cc2200;
+  --warn-bg: #faeeda;
+  --warn: #ba7517;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: #e8e8e8; padding: 24px; color: var(--text1); }
+h1 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+
+/* ── Controls ───────────────────────────── */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+.device-toggle { display: flex; border: 1px solid var(--border1); border-radius: 20px; overflow: hidden; background: var(--bg); }
+.dt-btn { font-size: 11px; padding: 5px 14px; cursor: pointer; color: var(--text2); background: transparent; border: none; display: flex; align-items: center; gap: 4px; }
+.dt-btn.active { background: var(--text1); color: var(--bg); }
+.path-toggle { display: flex; border: 1px solid var(--border1); border-radius: 20px; overflow: hidden; background: var(--bg); }
+.pt-btn { font-size: 11px; padding: 5px 14px; cursor: pointer; color: var(--text2); background: transparent; border: none; }
+.pt-btn.active { background: var(--text1); color: var(--bg); }
+.nav-btn { font-size: 11px; padding: 5px 12px; border: 1px solid var(--border2); border-radius: 20px; cursor: pointer; background: var(--bg); color: var(--text2); }
+.nav-btn:hover { background: var(--bg2); }
+.nav-btn.cur { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.sep { font-size: 11px; color: var(--text3); margin: 0 4px; }
+
+/* ── Mobile: phone frame ────────────────── */
+.phone { width: 240px; flex-shrink: 0; }
+.phone-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; text-align: center; }
+.phone-frame { border: 2px solid #333; border-radius: 32px; background: var(--bg); overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.15); position: relative; }
+.notch { width: 72px; height: 18px; background: #333; border-radius: 0 0 10px 10px; margin: 0 auto; }
+.screen { padding: 12px; min-height: 440px; display: flex; flex-direction: column; }
+
+/* Mobile app bar */
+.app-bar { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 10px; border-bottom: 0.5px solid var(--border3); margin-bottom: 10px; }
+.app-title { font-size: 12px; font-weight: 600; color: var(--text1); }
+.app-sub { font-size: 9px; color: var(--text3); }
+.back-btn { font-size: 11px; color: var(--info); cursor: pointer; }
+
+/* Mobile shared */
+.section-label { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 6px; margin-top: 10px; }
+.btn-primary { display: block; width: 100%; padding: 10px; background: var(--text1); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; text-align: center; margin-top: auto; }
+.btn-secondary { display: block; width: 100%; padding: 8px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-size: 11px; cursor: pointer; text-align: center; margin-top: 6px; }
+.btn-ghost { font-size: 11px; color: var(--text3); text-align: center; cursor: pointer; padding: 6px; display: block; }
+.lang-toggle { display: flex; gap: 4px; }
+.lt-chip { font-size: 9px; padding: 2px 8px; border: 0.5px solid var(--border2); border-radius: 10px; color: var(--text3); cursor: pointer; }
+.lt-chip.active { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+
+/* Mobile screen 1 */
+.home-card { border: 1px solid var(--border2); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex: 1; }
+.home-card:hover { border-color: var(--border1); background: var(--bg2); }
+.home-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; }
+.home-icon i { font-size: 18px; color: var(--text2); }
+.home-card-title { font-size: 11px; font-weight: 500; color: var(--text1); }
+.home-card-sub { font-size: 9px; color: var(--text3); text-align: center; }
+.home-cards-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.recent-label { font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 7px; }
+.story-card { padding: 7px 9px; border: 0.5px solid var(--border3); border-radius: 6px; margin-bottom: 5px; }
+.story-title { font-size: 10px; font-weight: 500; color: var(--text1); margin-bottom: 2px; }
+.story-meta { font-size: 9px; color: var(--text3); }
+
+/* Mobile screen 2 */
+.consent-box { border: 1px solid var(--border2); border-radius: 8px; padding: 12px; font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; font-style: italic; background: var(--bg2); }
+.consent-name { font-weight: 600; color: var(--text1); font-style: normal; }
+.consent-meta { font-size: 9px; color: var(--text3); margin-bottom: 14px; line-height: 1.5; }
+.consent-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.consent-icon i { font-size: 20px; color: var(--text2); }
+
+/* Mobile screen 3a */
+.waveform { height: 60px; display: flex; align-items: center; justify-content: center; gap: 3px; margin: 16px 0; }
+.wbar { border-radius: 2px; background: var(--text1); }
+.timer { font-size: 28px; font-weight: 200; color: var(--text1); text-align: center; letter-spacing: 0.04em; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #cc2200; display: inline-block; margin-right: 5px; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.rec-label { font-size: 10px; color: var(--text2); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.stop-btn { width: 54px; height: 54px; border-radius: 50%; background: var(--text1); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 10px; }
+.stop-btn i { font-size: 20px; color: var(--bg); }
+.stop-label { font-size: 10px; color: var(--text3); text-align: center; margin-bottom: auto; }
+.noise-warn { display: flex; align-items: center; gap: 6px; background: var(--warn-bg); border: 0.5px solid var(--warn); border-radius: 6px; padding: 7px 9px; font-size: 10px; color: var(--warn); margin-top: 8px; }
+
+/* Mobile screen 3b */
+.upload-zone { border: 1.5px dashed var(--border1); border-radius: 10px; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; margin-bottom: 12px; background: var(--bg2); cursor: pointer; }
+.upload-zone i { font-size: 28px; color: var(--text3); }
+.upload-zone-title { font-size: 11px; font-weight: 500; color: var(--text2); }
+.upload-zone-sub { font-size: 9px; color: var(--text3); }
+.file-selected { border: 1px solid var(--border2); border-radius: 8px; padding: 10px 11px; display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.file-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--bg2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.file-icon i { font-size: 16px; color: var(--text2); }
+.file-name { font-size: 11px; font-weight: 500; color: var(--text1); }
+.file-meta { font-size: 9px; color: var(--text3); margin-top: 1px; }
+.file-change { font-size: 10px; color: var(--info); cursor: pointer; flex-shrink: 0; }
+.progress-bar { height: 4px; background: var(--border3); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: var(--text1); border-radius: 2px; width: 45%; }
+.progress-label { font-size: 9px; color: var(--text3); text-align: right; margin-top: 3px; }
+
+/* Mobile screen 4 */
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.chip { padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 10px; color: var(--text2); cursor: pointer; }
+.chip.sel { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.chip.add { border-style: dashed; color: var(--text3); }
+.tag-tip { font-size: 10px; color: var(--text3); line-height: 1.5; }
+.narrator-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; background: var(--bg3); font-size: 10px; color: var(--text2); border: 0.5px solid var(--border2); margin-bottom: 8px; }
+.narrator-chip i { font-size: 11px; }
+
+/* Mobile screen 5 */
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border3); font-size: 11px; }
+.summary-label { color: var(--text3); font-size: 10px; }
+.summary-val { color: var(--text1); font-weight: 500; }
+.mini-player { border: 0.5px solid var(--border2); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mini-play { width: 24px; height: 24px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mini-play i { font-size: 10px; color: var(--text2); }
+.mini-wav { flex: 1; height: 20px; display: flex; align-items: center; gap: 1.5px; }
+.mini-wb { width: 2px; border-radius: 1px; background: var(--border2); }
+.mini-wb.p { background: var(--text1); }
+.mini-time { font-size: 9px; color: var(--text3); }
+.del-btn { display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; padding: 7px; background: transparent; color: var(--danger); border: 1px solid #e8c0b8; border-radius: 8px; font-size: 11px; cursor: pointer; margin-top: 6px; }
+.del-btn i { font-size: 14px; }
+.del-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; border-radius: 30px; z-index: 10; }
+.del-icon { width: 44px; height: 44px; border-radius: 50%; background: #fde8e4; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.del-icon i { font-size: 22px; color: var(--danger); }
+.del-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.del-body { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 20px; }
+.del-confirm-btn { width: 100%; padding: 9px; background: var(--danger); color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; margin-bottom: 8px; }
+.del-cancel-btn { width: 100%; padding: 8px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-size: 11px; cursor: pointer; }
+
+/* Mobile screen 6 */
+.sent-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px; }
+.sent-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.sent-icon i { font-size: 28px; color: var(--text1); }
+.sent-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.sent-body { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+.sent-est { font-size: 10px; color: var(--text3); background: var(--bg2); border-radius: 6px; padding: 6px 10px; margin-bottom: 20px; }
+
+/* ── Desktop: browser chrome ────────────── */
+.browser { border: 1.5px solid var(--border1); border-radius: 12px; overflow: hidden; background: var(--bg); box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-width: 860px; }
+.browser-bar { background: var(--bg2); padding: 8px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--border3); }
+.browser-dots { display: flex; gap: 5px; }
+.bdot { width: 9px; height: 9px; border-radius: 50%; background: var(--border2); }
+.url-bar { flex: 1; background: var(--bg); border: 0.5px solid var(--border3); border-radius: 6px; padding: 3px 10px; font-size: 10px; color: var(--text3); }
+
+/* Desktop app nav */
+.d-app-nav { display: flex; align-items: center; padding: 10px 20px; border-bottom: 0.5px solid var(--border3); }
+.d-app-logo { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text1); }
+.d-app-logo span { font-size: 16px; }
+.d-nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.d-lang-toggle { display: flex; border: 0.5px solid var(--border2); border-radius: 20px; overflow: hidden; }
+.d-lt-btn { font-size: 10px; padding: 3px 10px; cursor: pointer; color: var(--text2); background: transparent; border: none; }
+.d-lt-btn.active { background: var(--text1); color: var(--bg); }
+
+/* Desktop content area — centered card */
+.d-body { background: var(--bg2); min-height: 520px; display: flex; align-items: flex-start; justify-content: center; padding: 32px 20px; }
+.d-card { background: var(--bg); border: 0.5px solid var(--border3); border-radius: 12px; width: 100%; max-width: 480px; padding: 28px; display: flex; flex-direction: column; gap: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.d-card-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.d-card-sub { font-size: 11px; color: var(--text3); margin-bottom: 20px; }
+.d-back { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--info); cursor: pointer; margin-bottom: 16px; }
+.d-back i { font-size: 13px; }
+
+/* Desktop primary button */
+.d-btn-primary { display: block; width: 100%; padding: 11px; background: var(--text1); color: var(--bg); border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; margin-top: 20px; }
+.d-btn-secondary { display: block; width: 100%; padding: 9px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-size: 12px; cursor: pointer; text-align: center; margin-top: 8px; }
+.d-btn-ghost { font-size: 12px; color: var(--text3); text-align: center; cursor: pointer; padding: 8px; display: block; margin-top: 4px; }
+
+/* Desktop home */
+.d-home-options { display: flex; gap: 12px; margin-bottom: 24px; }
+.d-home-card { flex: 1; border: 1px solid var(--border2); border-radius: 10px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.d-home-card:hover { border-color: var(--border1); background: var(--bg2); }
+.d-home-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; }
+.d-home-icon i { font-size: 22px; color: var(--text2); }
+.d-home-card-title { font-size: 13px; font-weight: 500; color: var(--text1); }
+.d-home-card-sub { font-size: 10px; color: var(--text3); text-align: center; }
+.d-recent-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; }
+.d-story-card { padding: 8px 10px; border: 0.5px solid var(--border3); border-radius: 6px; margin-bottom: 6px; }
+.d-story-title { font-size: 12px; font-weight: 500; color: var(--text1); margin-bottom: 2px; }
+.d-story-meta { font-size: 10px; color: var(--text3); }
+
+/* Desktop consent */
+.d-consent-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.d-consent-icon i { font-size: 24px; color: var(--text2); }
+.d-consent-box { border: 1px solid var(--border2); border-radius: 8px; padding: 14px 16px; font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 12px; font-style: italic; background: var(--bg2); }
+.d-consent-name { font-weight: 600; color: var(--text1); font-style: normal; }
+.d-consent-meta { font-size: 10px; color: var(--text3); margin-bottom: 4px; line-height: 1.6; }
+
+/* Desktop recording */
+.d-waveform { height: 72px; display: flex; align-items: center; justify-content: center; gap: 3px; margin: 20px 0; }
+.d-wbar { border-radius: 2px; background: var(--text1); }
+.d-timer { font-size: 44px; font-weight: 200; color: var(--text1); text-align: center; letter-spacing: 0.04em; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.d-rec-label { font-size: 11px; color: var(--text2); display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 24px; }
+.d-rec-dot { width: 9px; height: 9px; border-radius: 50%; background: #cc2200; display: inline-block; animation: pulse 1.2s ease-in-out infinite; flex-shrink: 0; }
+.d-stop-btn { width: 64px; height: 64px; border-radius: 50%; background: var(--text1); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 10px; }
+.d-stop-btn i { font-size: 24px; color: var(--bg); }
+.d-stop-label { font-size: 11px; color: var(--text3); text-align: center; }
+.d-noise-warn { display: flex; align-items: center; gap: 7px; background: var(--warn-bg); border: 0.5px solid var(--warn); border-radius: 6px; padding: 9px 12px; font-size: 11px; color: var(--warn); margin-top: 16px; }
+
+/* Desktop discard row */
+.d-discard-row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+.d-discard { font-size: 11px; color: var(--danger); cursor: pointer; }
+
+/* Desktop upload */
+.d-upload-zone { border: 1.5px dashed var(--border1); border-radius: 10px; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; margin-bottom: 16px; background: var(--bg2); cursor: pointer; }
+.d-upload-zone i { font-size: 36px; color: var(--text3); }
+.d-upload-zone-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+.d-upload-zone-sub { font-size: 10px; color: var(--text3); }
+.d-upload-zone-drag { font-size: 10px; color: var(--info); margin-top: 2px; }
+.d-file-selected { border: 1px solid var(--border2); border-radius: 8px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.d-file-icon { width: 36px; height: 36px; border-radius: 7px; background: var(--bg2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.d-file-icon i { font-size: 18px; color: var(--text2); }
+.d-file-name { font-size: 12px; font-weight: 500; color: var(--text1); }
+.d-file-meta { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.d-file-change { font-size: 11px; color: var(--info); cursor: pointer; flex-shrink: 0; }
+.d-progress-bar { height: 5px; background: var(--border3); border-radius: 3px; overflow: hidden; margin-top: 10px; }
+.d-progress-fill { height: 100%; background: var(--text1); border-radius: 3px; width: 45%; }
+.d-progress-label { font-size: 10px; color: var(--text3); text-align: right; margin-top: 4px; }
+
+/* Desktop quick tag */
+.d-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.d-chip { padding: 5px 12px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 11px; color: var(--text2); cursor: pointer; }
+.d-chip.sel { background: var(--text1); color: var(--bg); border-color: var(--text1); }
+.d-chip.add { border-style: dashed; color: var(--text3); }
+.d-narrator-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 20px; background: var(--bg3); font-size: 11px; color: var(--text2); border: 0.5px solid var(--border2); margin-bottom: 10px; }
+.d-section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; margin-top: 14px; }
+.d-tag-tip { font-size: 11px; color: var(--text3); line-height: 1.5; margin-top: 8px; }
+
+/* Desktop confirm */
+.d-mini-player { border: 0.5px solid var(--border2); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.d-mini-play { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.d-mini-play i { font-size: 12px; color: var(--text2); }
+.d-mini-wav { flex: 1; height: 22px; display: flex; align-items: center; gap: 1.5px; }
+.d-mini-wb { width: 2px; border-radius: 1px; background: var(--border2); }
+.d-mini-wb.p { background: var(--text1); }
+.d-mini-time { font-size: 10px; color: var(--text3); }
+.d-summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border3); font-size: 12px; }
+.d-summary-label { color: var(--text3); font-size: 11px; }
+.d-summary-val { color: var(--text1); font-weight: 500; }
+.d-del-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 9px; background: transparent; color: var(--danger); border: 1px solid #e8c0b8; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 8px; }
+.d-del-btn i { font-size: 15px; }
+
+/* Desktop delete confirm (modal-style overlay in card) */
+.d-del-modal { background: rgba(255,255,255,0.97); border-radius: 10px; padding: 28px 24px; text-align: center; border: 1px solid var(--border2); }
+.d-del-icon { width: 52px; height: 52px; border-radius: 50%; background: #fde8e4; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.d-del-icon i { font-size: 26px; color: var(--danger); }
+.d-del-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.d-del-body { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 24px; }
+.d-del-confirm-btn { width: 100%; padding: 11px; background: var(--danger); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 8px; }
+.d-del-cancel-btn { width: 100%; padding: 10px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-size: 12px; cursor: pointer; }
+
+/* Desktop sent */
+.d-sent { text-align: center; padding: 16px 0; }
+.d-sent-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--bg2); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.d-sent-icon i { font-size: 32px; color: var(--text1); }
+.d-sent-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.d-sent-body { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+.d-sent-est { font-size: 11px; color: var(--text3); background: var(--bg2); border-radius: 6px; padding: 8px 14px; margin-bottom: 24px; display: inline-block; }
+
+/* Annotations */
+.ann-section { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border2); }
+.ann-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 12px; }
+.ann-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.ann-item { flex: 1; min-width: 200px; padding-left: 10px; border-left: 2px solid var(--border2); }
+.ann-t { font-size: 12px; font-weight: 500; color: var(--text1); margin-bottom: 3px; }
+.ann-d { font-size: 11px; color: var(--text2); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<h1>Roeung (រឿង) — Capture Flow Wireframes</h1>
+<p class="subtitle">Sea family · Phase 1 MVP · Mobile + Desktop · Version 0.3</p>
+
+<div class="controls">
+  <div class="device-toggle">
+    <button class="dt-btn active" id="dt-mob" onclick="setDevice('mobile')"><i class="ti ti-device-mobile"></i> Mobile</button>
+    <button class="dt-btn" id="dt-desk" onclick="setDevice('desktop')"><i class="ti ti-device-desktop"></i> Desktop</button>
+  </div>
+  <span class="sep">|</span>
+  <strong style="font-size:11px;color:var(--text2);">Path:</strong>
+  <div class="path-toggle">
+    <button class="pt-btn active" id="btn-record" onclick="setPath('record')">🎙 Live recording</button>
+    <button class="pt-btn" id="btn-upload" onclick="setPath('upload')">📂 Upload audio</button>
+  </div>
+  <span class="sep">|</span>
+  <button class="nav-btn cur" onclick="goTo(0)">1.1 Home</button>
+  <button class="nav-btn" onclick="goTo(1)">1.2 Consent</button>
+  <button class="nav-btn" id="nav-record" onclick="goTo(2)">1.3a Recording</button>
+  <button class="nav-btn" onclick="goTo(3)">1.4 Quick Tag</button>
+  <button class="nav-btn" onclick="goTo(4)">1.5 Confirm</button>
+  <button class="nav-btn" onclick="goTo(5)">1.6 Sent</button>
+</div>
+
+<div id="screen-area"></div>
+
+<div class="ann-section">
+  <div class="ann-title">Annotations</div>
+  <div class="ann-grid" id="ann-grid"></div>
+</div>
+
+<script>
+let device = 'mobile';
+let path = 'record';
+let cur = 0;
+let showDel = false;
+let menuOpen = false;
+
+function setDevice(d) {
+  device = d;
+  document.getElementById('dt-mob').className = 'dt-btn' + (d === 'mobile' ? ' active' : '');
+  document.getElementById('dt-desk').className = 'dt-btn' + (d === 'desktop' ? ' active' : '');
+  render();
+}
+
+function setPath(p) {
+  path = p;
+  showDel = false; menuOpen = false;
+  document.getElementById('btn-record').className = 'pt-btn' + (p === 'record' ? ' active' : '');
+  document.getElementById('btn-upload').className = 'pt-btn' + (p === 'upload' ? ' active' : '');
+  document.getElementById('nav-record').textContent = p === 'record' ? '1.3a Recording' : '1.3b Upload';
+  render();
+}
+
+function goTo(i) {
+  cur = i; showDel = false; menuOpen = false;
+  document.querySelectorAll('.nav-btn').forEach((b, idx) => {
+    b.className = 'nav-btn' + (idx === i ? ' cur' : '');
+  });
+  render();
+}
+
+function toggleDel() { showDel = !showDel; render(); }
+
+function toggleMenu() { menuOpen = !menuOpen; render(); }
+
+function hbBtn() {
+  return `<button onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;flex-shrink:0"><i class="ti ti-menu-2" style="font-size:15px;color:var(--text2)"></i></button>`;
+}
+
+function drawerHTML(act, showQueue) {
+  const items = [{key:'book',icon:'ti-book',label:'The Book'},{key:'record',icon:'ti-microphone',label:'Record a Story'},...(showQueue?[{key:'queue',icon:'ti-inbox',label:'Review Queue'}]:[])];
+  return `<div onclick="toggleMenu()" style="position:absolute;inset:0;background:rgba(0,0,0,0.3);z-index:50;cursor:pointer"></div><div style="position:absolute;top:0;right:0;bottom:0;width:72%;max-width:240px;background:var(--bg);z-index:51;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,0.12)"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:0.5px solid var(--border3)"><div style="font-size:12px;font-weight:600;color:var(--text1)">❧ The Sea Family</div><button onclick="toggleMenu()" style="background:none;border:none;font-size:18px;color:var(--text2);cursor:pointer;line-height:1;padding:0">×</button></div><nav style="padding:6px;flex:1">${items.map(a=>`<div onclick="toggleMenu()" style="display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:12px;color:${a.key===act?'var(--text1)':'var(--text2)'};font-weight:${a.key===act?500:400};background:${a.key===act?'var(--bg2)':'transparent'};cursor:pointer;margin-bottom:2px"><i class="ti ${a.icon}" style="font-size:15px"></i>${a.label}</div>`).join('')}</nav><div style="padding:12px 14px;border-top:0.5px solid var(--border3)"><div style="font-size:10px;color:var(--text3);margin-bottom:6px">Language</div><div style="display:flex;border:0.5px solid var(--border2);border-radius:20px;overflow:hidden;width:fit-content"><button style="font-size:10px;padding:3px 10px;background:var(--text1);color:var(--bg);border:none;cursor:pointer">EN</button><button style="font-size:10px;padding:3px 10px;background:transparent;color:var(--text2);border:none;cursor:pointer">KH</button></div></div></div>`;
+}
+
+function miniwavs(n, frac) {
+  const h = [10,16,8,20,14,24,18,22,12,26,8,28,16,10,22,14,26,8,18,14,20,12,24,16,28,10,18,22];
+  return h.slice(0,n).map((v,i) => `<div class="mini-wb${i/n < frac ? ' p' : ''}" style="height:${v}px"></div>`).join('');
+}
+function dminiwavs(n, frac) {
+  const h = [10,16,8,20,14,24,18,22,12,26,8,28,16,10,22,14,26,8,18,14,20,12,24,16,28,10,18,22,14,20];
+  return h.slice(0,n).map((v,i) => `<div class="d-mini-wb${i/n < frac ? ' p' : ''}" style="height:${v}px"></div>`).join('');
+}
+
+function wavbars(cls, w, gap, count) {
+  const h = [10,20,35,28,45,38,52,42,30,55,44,32,48,38,25,42,50,36,44,28,38,46,34,48,30,36,52,40,28,44,50,38,46,32,42,54,30,40,48,36];
+  return h.slice(0, count||25).map(v => `<div class="${cls||'wbar'}" style="width:${w||3}px;height:${v}px;opacity:${0.35+Math.random()*0.65}"></div>`).join('');
+}
+
+// ── MOBILE SCREENS ─────────────────────────────────────────────────────
+
+function mScreen(i) {
+  switch(i) {
+    case 0: return `
+      <div class="app-bar">
+        <div><div class="app-title">Roeung</div><div class="app-sub">Sea family stories</div></div>
+        <div style="display:flex;align-items:center;gap:6px"><div class="lang-toggle"><div class="lt-chip active">EN</div><div class="lt-chip">KH</div></div>${hbBtn()}</div>
+      </div>
+      <div class="home-cards-row">
+        <div class="home-card" onclick="setPath('record');goTo(1)">
+          <div class="home-icon"><i class="ti ti-microphone"></i></div>
+          <div class="home-card-title">Record a story</div>
+          <div class="home-card-sub">Use your microphone</div>
+        </div>
+        <div class="home-card" onclick="setPath('upload');goTo(1)">
+          <div class="home-icon"><i class="ti ti-upload"></i></div>
+          <div class="home-card-title">Upload audio</div>
+          <div class="home-card-sub">mp3, m4a, wav</div>
+        </div>
+      </div>
+      <div class="recent-label">Recently added</div>
+      <div class="story-card"><div class="story-title">The noodle restaurant in Phnom Penh</div><div class="story-meta">Grandfather Sokha · 3 days ago · KH</div></div>
+      <div class="story-card"><div class="story-title">Meeting your grandmother for the first time</div><div class="story-meta">Father — Dara Sea · 1 week ago · EN</div></div>
+      <div class="story-card"><div class="story-title">The boat from Thailand to Germany</div><div class="story-meta">Grandmother Maly · 2 weeks ago · KH</div></div>`;
+
+    case 1: return `
+      <div class="app-bar">
+        <span class="back-btn" onclick="goTo(0)"><i class="ti ti-arrow-left"></i></span>
+        <div class="app-title">${path==='record'?'Record a story':'Upload audio'}</div>
+        ${hbBtn()}
+      </div>
+      <div class="consent-icon"><i class="ti ti-shield-check"></i></div>
+      <div style="font-size:13px;font-weight:600;text-align:center;margin-bottom:8px;">Consent</div>
+      <div class="consent-box">
+        ${path==='record'
+          ? `"We're about to record <span class="consent-name">Grandfather Sokha</span>'s story. They have agreed to be recorded and for this story to be shared with the family."`
+          : `"The person in this recording agreed to have it shared with the family."`}
+      </div>
+      <div class="consent-meta">Narrator name and your confirmation will be logged with a timestamp.<br>You can cancel now — nothing has been started yet.</div>
+      <button class="btn-primary" onclick="goTo(2)">Yes, they've agreed</button>
+      <button class="btn-ghost" onclick="goTo(0)">Cancel</button>`;
+
+    case 2: return path === 'record' ? `
+      <div class="app-bar">
+        <span class="back-btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i></span>
+        <div class="app-title">Recording</div>
+        ${hbBtn()}
+      </div>
+      <div class="timer">08:42</div>
+      <div class="rec-label"><span class="rec-dot"></span>Recording • max 60 min</div>
+      <div class="waveform">${wavbars()}</div>
+      <div class="stop-btn" onclick="goTo(3)"><i class="ti ti-player-stop"></i></div>
+      <div class="stop-label">Tap to stop</div>
+      <span class="btn-ghost" style="color:var(--danger);font-size:10px;margin-top:-2px" onclick="goTo(0)">Discard recording</span>
+      <div class="noise-warn"><i class="ti ti-alert-triangle"></i><span>Background noise detected</span></div>`
+    : `
+      <div class="app-bar">
+        <span class="back-btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i></span>
+        <div class="app-title">Upload audio</div>
+        ${hbBtn()}
+      </div>
+      <div class="upload-zone">
+        <i class="ti ti-file-upload"></i>
+        <div class="upload-zone-title">Choose an audio file</div>
+        <div class="upload-zone-sub">mp3, m4a, wav · max 500MB</div>
+      </div>
+      <div class="file-selected">
+        <div class="file-icon"><i class="ti ti-file-music"></i></div>
+        <div style="flex:1;min-width:0;"><div class="file-name">grandfather_sokha_nov.m4a</div><div class="file-meta">22 min · 48 MB</div></div>
+        <span class="file-change">Change</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="progress-label">Uploading… 45%</div>
+      <button class="btn-primary" onclick="goTo(3)" style="margin-top:auto;">Continue</button>`;
+
+    case 3: return `
+      <div class="app-bar">
+        <span class="back-btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i></span>
+        <div class="app-title">Quick tag</div>
+        ${hbBtn()}
+      </div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:10px;">Who is this story about?</div>
+      <div class="section-label" style="margin-top:0;">Pre-selected by recorder</div>
+      <div><span class="narrator-chip"><i class="ti ti-user-check"></i>Grandfather Sokha</span></div>
+      <div class="section-label">Sea family members</div>
+      <div class="chips">
+        <div class="chip sel">Grandfather Sokha</div>
+        <div class="chip sel">Grandmother Maly</div>
+        <div class="chip">Father — Dara</div>
+        <div class="chip">Aunt Sreymom</div>
+        <div class="chip">Uncle Virak</div>
+        <div class="chip add">+ Someone else</div>
+      </div>
+      <div class="tag-tip">Keeper can add or edit tags during review.</div>
+      <button class="btn-primary" onclick="goTo(4)">Next</button>
+      <button class="btn-ghost" onclick="goTo(4)">Skip for now</button>`;
+
+    case 4: return showDel ? `
+      <div class="del-overlay">
+        <div class="del-icon"><i class="ti ti-trash"></i></div>
+        <div class="del-title">Delete this recording?</div>
+        <div class="del-body">This can't be undone. The audio will be permanently deleted — nothing is sent to the Keepers.</div>
+        <button class="del-confirm-btn" onclick="goTo(0)">Yes, delete it</button>
+        <button class="del-cancel-btn" onclick="toggleDel()">Keep it</button>
+      </div>`
+    : `
+      <div class="app-bar">
+        <span class="back-btn" onclick="goTo(3)"><i class="ti ti-arrow-left"></i></span>
+        <div class="app-title">Confirm &amp; send</div>
+        ${hbBtn()}
+      </div>
+      <div class="mini-player">
+        <div class="mini-play"><i class="ti ti-player-play"></i></div>
+        <div class="mini-wav">${miniwavs(28, 0.3)}</div>
+        <div class="mini-time">${path==='record'?'08:42':'22:14'}</div>
+      </div>
+      <div class="summary-row"><span class="summary-label">Duration</span><span class="summary-val">${path==='record'?'8 min 42 sec':'22 min 14 sec'}</span></div>
+      <div class="summary-row"><span class="summary-label">Captured by</span><span class="summary-val">${path==='record'?'Live recording':'File upload'}</span></div>
+      <div class="summary-row"><span class="summary-label">People tagged</span><span class="summary-val">Grandfather Sokha, Grandmother Maly</span></div>
+      <div class="summary-row" style="border:none;"><span class="summary-label">Consent logged</span><span class="summary-val" style="color:var(--success);"><i class="ti ti-check"></i> Today, 10:24am</span></div>
+      <button class="btn-primary" onclick="goTo(5)" style="margin-top:12px;">Send to Keepers</button>
+      <button class="del-btn" onclick="toggleDel()"><i class="ti ti-trash"></i>Delete recording</button>`;
+
+    case 5: return `
+      <div class="sent-center">
+        <div class="sent-icon"><i class="ti ti-heart-handshake"></i></div>
+        <div class="sent-title">Your story is with the Keepers 🙏</div>
+        <div class="sent-body">The Sea family Keepers have been notified and will review it soon.</div>
+        <div class="sent-est">Estimated review time: 1–3 days</div>
+        <button class="btn-primary" style="margin-top:0;" onclick="goTo(0)">Record another story</button>
+        <button class="btn-secondary" onclick="goTo(0)">Back to home</button>
+      </div>`;
+  }
+}
+
+// ── DESKTOP SCREENS ────────────────────────────────────────────────────
+
+function browserChrome(url, inner) {
+  return `<div class="browser" style="position:relative">
+  <div class="browser-bar">
+    <div class="browser-dots"><div class="bdot"></div><div class="bdot"></div><div class="bdot"></div></div>
+    <div class="url-bar">roeung.family/${url}</div>
+  </div>
+  <div class="d-app-nav">
+    <div class="d-app-logo"><span>❧</span> The Sea Family</div>
+    <div class="d-nav-right">
+      <div class="d-lang-toggle"><button class="d-lt-btn active">EN</button><button class="d-lt-btn">KH</button></div>
+      ${hbBtn(16)}
+    </div>
+  </div>
+  <div class="d-body">${inner}</div>
+  ${menuOpen ? drawerHTML('record', false) : ''}
+</div>`;
+}
+
+function dScreen(i) {
+  switch(i) {
+    case 0: return browserChrome('', `
+      <div class="d-card" style="max-width:520px">
+        <div class="d-card-title">Share a story</div>
+        <div class="d-card-sub">Record or upload a voice memory for the Sea family archive.</div>
+        <div class="d-home-options">
+          <div class="d-home-card" onclick="setPath('record');goTo(1)">
+            <div class="d-home-icon"><i class="ti ti-microphone"></i></div>
+            <div class="d-home-card-title">Record a story</div>
+            <div class="d-home-card-sub">Use your computer's microphone</div>
+          </div>
+          <div class="d-home-card" onclick="setPath('upload');goTo(1)">
+            <div class="d-home-icon"><i class="ti ti-upload"></i></div>
+            <div class="d-home-card-title">Upload audio</div>
+            <div class="d-home-card-sub">mp3, m4a, wav · drag &amp; drop</div>
+          </div>
+        </div>
+        <div class="d-recent-label">Recently added</div>
+        <div class="d-story-card"><div class="d-story-title">The noodle restaurant in Phnom Penh</div><div class="d-story-meta">Grandfather Sokha · 3 days ago · KH</div></div>
+        <div class="d-story-card"><div class="d-story-title">Meeting your grandmother for the first time</div><div class="d-story-meta">Father — Dara Sea · 1 week ago · EN</div></div>
+        <div class="d-story-card"><div class="d-story-title">The boat from Thailand to Germany</div><div class="d-story-meta">Grandmother Maly · 2 weeks ago · KH</div></div>
+      </div>`);
+
+    case 1: return browserChrome('capture/consent', `
+      <div class="d-card">
+        <span class="d-back" onclick="goTo(0)"><i class="ti ti-arrow-left"></i> Back to home</span>
+        <div class="d-consent-icon"><i class="ti ti-shield-check"></i></div>
+        <div class="d-card-title" style="text-align:center;margin-bottom:4px">Consent</div>
+        <div class="d-card-sub" style="text-align:center">${path==='record'?'Record a story':'Upload audio'}</div>
+        <div class="d-consent-box">
+          ${path==='record'
+            ? `"We're about to record <span class="d-consent-name">Grandfather Sokha</span>'s story. They have agreed to be recorded and for this story to be shared with the family."`
+            : `"The person in this recording agreed to have it shared with the family."`}
+        </div>
+        <div class="d-consent-meta">Narrator name and your confirmation will be logged with a timestamp. You can cancel — nothing has been started yet.</div>
+        <button class="d-btn-primary" onclick="goTo(2)">Yes, they've agreed</button>
+        <button class="d-btn-ghost" onclick="goTo(0)">Cancel</button>
+      </div>`);
+
+    case 2: return path === 'record'
+      ? browserChrome('capture/record', `
+        <div class="d-card" style="text-align:center">
+          <div class="d-discard-row"><span class="d-discard" onclick="goTo(0)">Discard &amp; cancel</span></div>
+          <div class="d-timer">08:42</div>
+          <div class="d-rec-label"><span class="d-rec-dot"></span>Recording · max 60 min</div>
+          <div class="d-waveform">${wavbars('d-wbar', 4, 4, 36)}</div>
+          <div class="d-stop-btn" onclick="goTo(3)"><i class="ti ti-player-stop"></i></div>
+          <div class="d-stop-label" style="margin-bottom:16px">Click to stop</div>
+          <div class="d-noise-warn"><i class="ti ti-alert-triangle"></i><span>Background noise detected — try moving to a quieter room</span></div>
+        </div>`)
+      : browserChrome('capture/upload', `
+        <div class="d-card">
+          <span class="d-back" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</span>
+          <div class="d-card-title">Upload audio</div>
+          <div class="d-card-sub">Drag a file here, or click to browse</div>
+          <div class="d-upload-zone">
+            <i class="ti ti-file-upload"></i>
+            <div class="d-upload-zone-title">Drop your audio file here</div>
+            <div class="d-upload-zone-sub">mp3, m4a, wav · max 500MB</div>
+            <div class="d-upload-zone-drag">or click to browse</div>
+          </div>
+          <div class="d-file-selected">
+            <div class="d-file-icon"><i class="ti ti-file-music"></i></div>
+            <div style="flex:1;min-width:0;"><div class="d-file-name">grandfather_sokha_nov.m4a</div><div class="d-file-meta">22 min · 48 MB</div></div>
+            <span class="d-file-change">Change</span>
+          </div>
+          <div class="d-progress-bar"><div class="d-progress-fill"></div></div>
+          <div class="d-progress-label">Uploading… 45%</div>
+          <button class="d-btn-primary" onclick="goTo(3)">Continue</button>
+        </div>`);
+
+    case 3: return browserChrome('capture/tag', `
+      <div class="d-card">
+        <span class="d-back" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</span>
+        <div class="d-card-title">Quick tag</div>
+        <div class="d-card-sub">Who is this story about? Select all that apply.</div>
+        <div class="d-section-label" style="margin-top:0">Pre-selected</div>
+        <div><span class="d-narrator-chip"><i class="ti ti-user-check" style="font-size:13px"></i>Grandfather Sokha</span></div>
+        <div class="d-section-label">Sea family members</div>
+        <div class="d-chips">
+          <div class="d-chip sel">Grandfather Sokha</div>
+          <div class="d-chip sel">Grandmother Maly</div>
+          <div class="d-chip">Father — Dara</div>
+          <div class="d-chip">Aunt Sreymom</div>
+          <div class="d-chip">Uncle Virak</div>
+          <div class="d-chip add">+ Someone else</div>
+        </div>
+        <div class="d-tag-tip">Keepers can add or edit tags during review.</div>
+        <button class="d-btn-primary" onclick="goTo(4)">Next</button>
+        <button class="d-btn-ghost" onclick="goTo(4)">Skip for now</button>
+      </div>`);
+
+    case 4: return showDel
+      ? browserChrome('capture/confirm', `
+        <div class="d-card">
+          <div class="d-del-modal">
+            <div class="d-del-icon"><i class="ti ti-trash"></i></div>
+            <div class="d-del-title">Delete this recording?</div>
+            <div class="d-del-body">This can't be undone. The audio will be permanently deleted — nothing is sent to the Keepers.</div>
+            <button class="d-del-confirm-btn" onclick="goTo(0)">Yes, delete it</button>
+            <button class="d-del-cancel-btn" onclick="toggleDel()">Keep it</button>
+          </div>
+        </div>`)
+      : browserChrome('capture/confirm', `
+        <div class="d-card">
+          <span class="d-back" onclick="goTo(3)"><i class="ti ti-arrow-left"></i> Back</span>
+          <div class="d-card-title">Confirm &amp; send</div>
+          <div class="d-card-sub">Review before sending to the Keepers.</div>
+          <div class="d-mini-player">
+            <div class="d-mini-play"><i class="ti ti-player-play"></i></div>
+            <div class="d-mini-wav">${dminiwavs(32, 0.3)}</div>
+            <div class="d-mini-time">${path==='record'?'08:42':'22:14'}</div>
+          </div>
+          <div class="d-summary-row"><span class="d-summary-label">Duration</span><span class="d-summary-val">${path==='record'?'8 min 42 sec':'22 min 14 sec'}</span></div>
+          <div class="d-summary-row"><span class="d-summary-label">Captured by</span><span class="d-summary-val">${path==='record'?'Live recording':'File upload'}</span></div>
+          <div class="d-summary-row"><span class="d-summary-label">People tagged</span><span class="d-summary-val">Grandfather Sokha, Grandmother Maly</span></div>
+          <div class="d-summary-row" style="border:none"><span class="d-summary-label">Consent logged</span><span class="d-summary-val" style="color:var(--success)"><i class="ti ti-check"></i> Today, 10:24am</span></div>
+          <button class="d-btn-primary" onclick="goTo(5)">Send to Keepers</button>
+          <button class="d-del-btn" onclick="toggleDel()"><i class="ti ti-trash"></i>Delete recording</button>
+        </div>`);
+
+    case 5: return browserChrome('capture/sent', `
+      <div class="d-card" style="text-align:center">
+        <div class="d-sent">
+          <div class="d-sent-icon"><i class="ti ti-heart-handshake"></i></div>
+          <div class="d-sent-title">Your story is with the Keepers 🙏</div>
+          <div class="d-sent-body">The Sea family Keepers have been notified and will review it soon.</div>
+          <div class="d-sent-est">Estimated review time: 1–3 days</div>
+          <button class="d-btn-primary" onclick="goTo(0)">Record another story</button>
+          <button class="d-btn-secondary" onclick="goTo(0)">Back to home</button>
+        </div>
+      </div>`);
+  }
+}
+
+// ── Annotations ─────────────────────────────────────────────────────────
+
+const ANN = [
+  [
+    { t: 'Two equal options', d: 'Record and Upload are shown side by side with equal visual weight — neither is treated as the "main" path. Desktop adds a drag-and-drop hint to the Upload card.' },
+    { t: 'Language toggle', d: 'EN / KH persisted per device. On mobile: pill in app bar. On desktop: top-right of the app nav bar.' },
+    { t: 'Recent stories', d: 'Read-only previews of recently published stories — prompts contribution without being pushy. Same stories shown on both devices.' },
+    { t: 'Desktop: centered card layout', d: 'The capture flow is narrow and focused on desktop — no sidebar, no dashboard chrome. Max 480px card centered in the page, like a web form. Keeps the intimacy of a voice recording experience.' },
+  ],
+  [
+    { t: 'Hard gate — nothing starts until agreed', d: 'Mic doesn\'t open and file picker doesn\'t appear until confirmed. Consent logged with narrator name + timestamp.' },
+    { t: 'Wording differs by path', d: 'Live recording uses present tense ("about to record"). Upload uses past tense ("agreed to have it shared"). Toggle the path selector above to compare.' },
+    { t: 'Cancel here is clean', d: 'Backing out at this screen leaves no trace — no consent log, no audio file, nothing.' },
+  ],
+  path === 'record' ? [
+    { t: 'Waveform = mic is live', d: 'Animated waveform gives clear feedback that recording is in progress. Desktop waveform is slightly wider with a larger timer. No other controls shown.' },
+    { t: 'Desktop: "Click to stop" vs "Tap to stop"', d: 'Microcopy adjusts for the input device — desktop says click, mobile says tap.' },
+    { t: '"Discard & cancel" top-right on desktop', d: 'On mobile, Discard is in the header. On desktop it sits at the top-right of the card as a less prominent text link — deliberate, so it\'s available but not tempting.' },
+    { t: 'Noise warning', d: 'Shown if background levels exceed threshold (open Q). Desktop adds "try moving to a quieter room" — more actionable on desktop where the person can move.' },
+  ] : [
+    { t: 'Desktop: drag and drop', d: 'Upload zone on desktop is larger and explicitly supports drag-and-drop — a native browser affordance not available on mobile.' },
+    { t: 'File preview before continuing', d: 'File name and duration shown after selection — lets the recorder confirm they picked the right file. Same on both devices.' },
+    { t: 'Upload in background', d: 'Progress shown inline. User can continue to Quick Tag once upload starts; they don\'t have to wait.' },
+  ],
+  [
+    { t: 'Narrator pre-selected', d: 'The recorder\'s own name is pre-ticked. Reduces friction for the most common case.' },
+    { t: 'No categories, dates, or metadata', d: 'Capture first, organise later. Keeper handles chapter assignment during review.' },
+    { t: 'Skip allowed', d: 'Keeper can tag during review — skipping here doesn\'t block submission.' },
+  ],
+  [
+    { t: 'Playback preview', d: 'Recorder can listen back before sending. Important for uploads where quality may be unknown.' },
+    { t: 'Delete before sending — no request needed', d: 'Pre-submission delete is direct. GDPR deletion request process (with log) only applies after a story has been sent to Keepers.' },
+    { t: 'Desktop: delete modal vs mobile overlay', d: 'On mobile, the delete confirm uses a full-screen overlay. On desktop it replaces the card content — same confirmation steps, fits the narrower card context.' },
+    { t: 'Consent shown in summary', d: 'Reassures the recorder that consent was logged before they hit Send.' },
+  ],
+  [
+    { t: 'Warm confirmation', d: '"Your story is with the Keepers 🙏" — intentionally warm and relational, not transactional. Identical across both devices.' },
+    { t: 'Estimated review time', d: 'Shown if known, so the narrator isn\'t left wondering. Keepers can configure this.' },
+    { t: 'Prompt to contribute again', d: '"Record another story" surfaces here — after a successful capture is the highest-intent moment.' },
+  ],
+];
+
+function render() {
+  document.getElementById('screen-area').innerHTML = device === 'mobile'
+    ? `<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div class="phone">
+          <div class="phone-label">${['1.1 Home','1.2 Consent',path==='record'?'1.3a Recording':'1.3b Upload','1.4 Quick Tag','1.5 Confirm','1.6 Sent'][cur]}</div>
+          <div class="phone-frame" style="position:relative">
+            <div class="notch"></div>
+            <div class="screen">${mScreen(cur)}</div>
+            ${menuOpen ? drawerHTML('record', false) : ''}
+          </div>
+        </div>
+      </div>`
+    : dScreen(cur);
+
+  // rebuild path-sensitive annotation entry
+  ANN[2] = path === 'record' ? [
+    { t: 'Waveform = mic is live', d: 'Animated waveform gives clear feedback that recording is in progress. Desktop waveform is slightly wider with a larger timer. No other controls shown.' },
+    { t: 'Desktop: "Click to stop" vs "Tap to stop"', d: 'Microcopy adjusts for the input device — desktop says click, mobile says tap.' },
+    { t: '"Discard & cancel" top-right on desktop', d: 'On mobile, Discard is in the header. On desktop it sits at the top-right of the card as a less prominent text link — deliberate, so it\'s available but not tempting.' },
+    { t: 'Noise warning', d: 'Shown if background levels exceed threshold (open Q). Desktop adds "try moving to a quieter room" — more actionable on desktop where the person can move.' },
+  ] : [
+    { t: 'Desktop: drag and drop', d: 'Upload zone on desktop is larger and explicitly supports drag-and-drop — a native browser affordance not available on mobile.' },
+    { t: 'File preview before continuing', d: 'File name and duration shown after selection — lets the recorder confirm they picked the right file. Same on both devices.' },
+    { t: 'Upload in background', d: 'Progress shown inline. User can continue to Quick Tag once upload starts; they don\'t have to wait.' },
+  ];
+
+  const anns = ANN[cur] || [];
+  document.getElementById('ann-grid').innerHTML = anns.map(a =>
+    `<div class="ann-item"><div class="ann-t">${a.t}</div><div class="ann-d">${a.d}</div></div>`
+  ).join('');
+}
+
+render();
+</script>
+</body>
+</html>
