@@ -23,6 +23,10 @@ class Settings:
     # Redis connection for the ARQ AI pipeline job queue (CLAUDE.md "AI job queue").
     redis_url: str = os.environ["REDIS_URL"]
 
+    # Below this audio quality score, the pipeline sets status = 'rejected'
+    # and stops (CLAUDE.md "AI Pipeline (ARQ Workers)" step 1).
+    audio_quality_threshold: float = float(os.environ.get("AUDIO_QUALITY_THRESHOLD", "0.5"))
+
 
 @lru_cache
 def get_settings() -> Settings:
