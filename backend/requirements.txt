@@ -7,3 +7,4 @@ supabase
 arq
 httpx
 python-dotenv
+pyjwt
