@@ -12,11 +12,30 @@ from typing import Any, Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.types import TypeDecorator
 from sqlmodel import Field
 
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class TimestampTZ(TypeDecorator):
+    """TIMESTAMPTZ that returns timezone-aware datetimes on every backend.
+
+    SQLite has no `TIMESTAMPTZ` type and returns naive datetimes for
+    `DateTime(timezone=True)` columns, which breaks comparisons against
+    `utcnow()`. Postgres (via psycopg2) already returns aware datetimes, so
+    this is a no-op there.
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_result_value(self, value: Optional[datetime], dialect: Any) -> Optional[datetime]:
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
 
 
 def uuid_pk_field() -> Any:
@@ -63,7 +82,7 @@ def timestamptz_field(
     if onupdate_now:
         column_kwargs["onupdate"] = func.now()
 
-    field_kwargs: dict = {"sa_column": Column(DateTime(timezone=True), nullable=nullable, **column_kwargs)}
+    field_kwargs: dict = {"sa_column": Column(TimestampTZ(), nullable=nullable, **column_kwargs)}
     if default_factory is not None:
         field_kwargs["default_factory"] = default_factory
     else:
