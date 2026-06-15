@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 
-from app.api import book, keepers, stories
+from app.api import book, family_members, keepers, stories
 
 app = FastAPI(title="Roeung API")
 
 app.include_router(stories.router)
+app.include_router(family_members.router)
 app.include_router(keepers.router)
 app.include_router(book.router)
 
