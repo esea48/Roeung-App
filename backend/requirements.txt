@@ -9,3 +9,7 @@ arq
 httpx
 python-dotenv
 pyjwt
+openai
+librosa
+soundfile
+numpy

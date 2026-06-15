@@ -42,3 +42,9 @@ def delete_audio_file(storage_key: str) -> None:
     """Remove an audio object from storage (GDPR / pre-submission deletion)."""
     settings = get_settings()
     _client().storage.from_(settings.supabase_storage_bucket).remove([storage_key])
+
+
+def download_audio_file(storage_key: str) -> bytes:
+    """Download an audio object's bytes (used by the AI pipeline)."""
+    settings = get_settings()
+    return _client().storage.from_(settings.supabase_storage_bucket).download(storage_key)
