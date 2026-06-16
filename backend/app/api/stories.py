@@ -127,6 +127,16 @@ async def upload_story_audio(
             detail="Audio can only be added to a submitted story",
         )
 
+    # Retry case: a previous attempt may have uploaded the file and committed the
+    # AudioFile row but then failed to enqueue the pipeline job (e.g. Redis down).
+    # If the row already exists, skip re-uploading (invariant #4: never overwrite)
+    # and just re-enqueue.
+    existing = session.exec(select(AudioFile).where(AudioFile.story_id == story.id)).first()
+    if existing is not None:
+        await file.read()  # consume the request body
+        await enqueue_story_pipeline(story.id)
+        return existing
+
     content = await file.read()
     storage_key = upload_audio_file(family.id, story.id, file.filename or "audio", content, file.content_type)
 

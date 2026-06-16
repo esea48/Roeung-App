@@ -5,7 +5,7 @@ from functools import lru_cache
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 class Settings:
