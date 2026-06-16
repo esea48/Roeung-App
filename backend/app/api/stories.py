@@ -9,7 +9,7 @@ import hashlib
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, Response, UploadFile, status
 from sqlmodel import Session, select
 
 from app.api.deps import get_family
@@ -25,7 +25,7 @@ from app.schemas.stories import (
     StoryTagsCreateRequest,
 )
 from app.services.storage import delete_audio_file, upload_audio_file
-from app.workers.pipeline import enqueue_story_pipeline
+from app.services.ai_pipeline import run_pipeline
 
 router = APIRouter(prefix="/f/{access_token}/stories", tags=["stories"])
 
@@ -76,6 +76,7 @@ def create_story(
         narrator_id=payload.narrator_id,
         narrator_name_raw=payload.narrator_name_raw,
         recorder_name=payload.recorder_name,
+        audio_language=payload.audio_language,
         consent_given_at=consented_at,
         consent_wording_key=payload.consent_wording_key,
         submitted_at=consented_at,
@@ -114,6 +115,7 @@ def create_story(
 @router.post("/{story_id}/audio", response_model=AudioFileResponse, status_code=status.HTTP_201_CREATED)
 async def upload_story_audio(
     story_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     family: Family = Depends(get_family),
     session: Session = Depends(get_session),
@@ -127,14 +129,13 @@ async def upload_story_audio(
             detail="Audio can only be added to a submitted story",
         )
 
-    # Retry case: a previous attempt may have uploaded the file and committed the
-    # AudioFile row but then failed to enqueue the pipeline job (e.g. Redis down).
-    # If the row already exists, skip re-uploading (invariant #4: never overwrite)
-    # and just re-enqueue.
+    # Retry case: a previous attempt may have uploaded the file but failed before
+    # the pipeline started. Skip re-uploading (invariant #4: never overwrite) and
+    # just re-trigger the pipeline.
     existing = session.exec(select(AudioFile).where(AudioFile.story_id == story.id)).first()
     if existing is not None:
         await file.read()  # consume the request body
-        await enqueue_story_pipeline(story.id)
+        background_tasks.add_task(run_pipeline, str(story.id))
         return existing
 
     content = await file.read()
@@ -152,7 +153,7 @@ async def upload_story_audio(
     session.commit()
     session.refresh(audio)
 
-    await enqueue_story_pipeline(story.id)
+    background_tasks.add_task(run_pipeline, str(story.id))
 
     return audio
 

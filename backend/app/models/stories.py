@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, SQLModel
 
 from .common import timestamptz_field, utcnow, uuid_fk_field, uuid_pk_field
-from .enums import CaptureMethod, LanguageDetected, StoryStatus
+from .enums import CaptureMethod, Language, LanguageDetected, StoryStatus
 
 
 class Story(SQLModel, table=True):
@@ -44,6 +44,12 @@ class Story(SQLModel, table=True):
 
     submitted_at: Optional[datetime] = timestamptz_field(nullable=True)
 
+    # Set by the recorder at capture time; passed to Whisper to improve accuracy.
+    audio_language: Optional[Language] = Field(
+        default=None,
+        sa_column=Column(SAEnum(Language, name="language")),
+    )
+
     # Set by the AI pipeline.
     language_detected: Optional[LanguageDetected] = Field(
         default=None,
@@ -58,6 +64,10 @@ class Story(SQLModel, table=True):
     processing_step: Optional[str] = None
     # Set if an AI pipeline step fails; status stays 'processing' so a retry can run.
     processing_error: Optional[str] = None
+
+    # Keeper's full edited transcript/translation (story-level; set in review UI).
+    transcript_edited: Optional[str] = None
+    translation_edited: Optional[str] = None
 
     title_en: Optional[str] = None
     title_kh: Optional[str] = None

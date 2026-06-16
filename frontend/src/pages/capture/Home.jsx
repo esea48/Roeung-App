@@ -7,7 +7,7 @@ import { relativeTime } from './format';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { lang, setPath, recentStories, loadingFamily } = useCapture();
+  const { lang, setPath, audioLang, setAudioLang, recentStories, loadingFamily } = useCapture();
 
   function choose(path) {
     setPath(path);
@@ -18,6 +18,26 @@ export default function Home() {
     <Shell>
       <div className="screen-content">
         <div className="title-lg">{t(lang, 'homeHeading')}</div>
+
+        <div className="audio-lang-picker">
+          <div className="section-label">{t(lang, 'audioLangLabel')}</div>
+          <div className="audio-lang-options">
+            <button
+              type="button"
+              className={`audio-lang-btn${audioLang === 'kh' ? ' active' : ''}`}
+              onClick={() => setAudioLang('kh')}
+            >
+              {t(lang, 'audioLangKh')}
+            </button>
+            <button
+              type="button"
+              className={`audio-lang-btn${audioLang === 'en' ? ' active' : ''}`}
+              onClick={() => setAudioLang('en')}
+            >
+              {t(lang, 'audioLangEn')}
+            </button>
+          </div>
+        </div>
 
         <div className="home-options">
           <button type="button" className="home-card" onClick={() => choose('record')}>

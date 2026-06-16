@@ -6,7 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from app.models.enums import AudioFileType, CaptureMethod, StoryStatus, TaggedBy
+from app.models.enums import AudioFileType, CaptureMethod, Language, StoryStatus, TaggedBy
 
 
 class StoryCreateRequest(BaseModel):
@@ -20,6 +20,8 @@ class StoryCreateRequest(BaseModel):
     consent_wording_key: str
     # When the recorder tapped "Yes, they've agreed"; defaults to now.
     consented_at: Optional[datetime] = None
+    # Language the recorder says the audio is in; passed to Whisper for accuracy.
+    audio_language: Optional[Language] = None
 
 
 class StoryResponse(BaseModel):

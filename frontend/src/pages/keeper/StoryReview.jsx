@@ -7,7 +7,6 @@ import {
   pingStory,
   pingStoryBeacon,
   updateStory,
-  updateSegment,
   publishStory,
   archiveStory,
   linkMention,
@@ -125,58 +124,45 @@ function AudioPlayer({ audioUrl, storyId }) {
   );
 }
 
-// ── Segment row ───────────────────────────────────────────────────────────────
+// ── Full-story transcript editor ──────────────────────────────────────────────
 
-function SegmentRow({ segment, onEditTranscript, onEditTranslation, mobileLang }) {
-  const { transcript, translation } = segment;
-  const isLowConfidence = translation && translation.confidence_score < 0.7;
+function TranscriptEditor({ story, mobileLang, onSave }) {
+  const transcriptSegments = story.transcript_segments ?? [];
+  const translationSegments = story.translation_segments ?? [];
+
+  const fullTranscript =
+    story.transcript_edited ??
+    transcriptSegments.map((s) => s.edited_text ?? s.original_text).join('\n\n');
+  const fullTranslation =
+    story.translation_edited ??
+    translationSegments.map((s) => s.edited_text ?? s.original_text).join('\n\n');
+
+  const hasLowConfidence = translationSegments.some(
+    (s) => s.confidence_score !== null && s.confidence_score < 0.7
+  );
 
   const showKh = !mobileLang || mobileLang === 'kh';
   const showEn = !mobileLang || mobileLang === 'en';
 
   return (
-    <div className="segment-row">
-      {/* Transcript (source language) */}
+    <div className="segment-row transcript-full">
       <div className={`segment-col ${!showKh ? 'hidden-mobile' : ''}`}>
         <textarea
-          className={`segment-textarea ${transcript?.language === 'kh' ? 'lang-kh' : ''}`}
-          defaultValue={transcript?.edited_text ?? transcript?.original_text ?? ''}
-          onBlur={(e) => {
-            const val = e.target.value;
-            if (val !== (transcript?.edited_text ?? transcript?.original_text ?? '')) {
-              onEditTranscript(transcript.id, val);
-            }
-          }}
-          rows={3}
+          className="segment-textarea lang-kh transcript-full-area"
+          defaultValue={fullTranscript}
+          onBlur={(e) => onSave({ transcript_edited: e.target.value })}
           placeholder="Transcript…"
         />
-        {transcript?.edited_text && transcript.edited_text !== transcript.original_text && (
-          <div className="segment-original">Original: {transcript.original_text}</div>
-        )}
       </div>
-
-      {/* Translation */}
       <div className={`segment-col ${!showEn ? 'hidden-mobile' : ''}`}>
         <textarea
-          className={`segment-textarea ${isLowConfidence ? 'warn-segment' : ''}`}
-          defaultValue={translation?.edited_text ?? translation?.original_text ?? ''}
-          onBlur={(e) => {
-            const val = e.target.value;
-            if (val !== (translation?.edited_text ?? translation?.original_text ?? '')) {
-              onEditTranslation(translation.id, val);
-            }
-          }}
-          rows={3}
+          className={`segment-textarea transcript-full-area${hasLowConfidence ? ' warn-segment' : ''}`}
+          defaultValue={fullTranslation}
+          onBlur={(e) => onSave({ translation_edited: e.target.value })}
           placeholder="Translation…"
         />
-        {isLowConfidence && (
-          <div className="segment-warn-note">
-            ⚠ Low confidence {translation.confidence_score !== null && `(${Math.round(translation.confidence_score * 100)}%)`}
-            {translation.cultural_flag && ' · Cultural nuance'}
-          </div>
-        )}
-        {translation?.edited_text && translation.edited_text !== translation.original_text && (
-          <div className="segment-original">Original: {translation.original_text}</div>
+        {hasLowConfidence && (
+          <div className="segment-warn-note">⚠ Some segments have low confidence</div>
         )}
       </div>
     </div>
@@ -299,7 +285,7 @@ function PeopleSection({ tags, mentions, familyMembers, storyId, token, onUpdate
           {pendingMentions.map((mention) => (
             <div key={mention.id} className="mention-row">
               <span className="mention-name">
-                <span className="mention-quote">"{mention.mention_text}"</span>
+                <span className="mention-quote">"{mention.name_raw}"</span>
               </span>
 
               {linkingMentionId === mention.id ? (
@@ -344,7 +330,7 @@ function PeopleSection({ tags, mentions, familyMembers, storyId, token, onUpdate
           {linkedMentions.map((mention) => (
             <div key={mention.id} className="mention-row">
               <span className="mention-name">
-                <span className="mention-quote">"{mention.mention_text}"</span>
+                <span className="mention-quote">"{mention.name_raw}"</span>
               </span>
               <span className="mention-resolved">
                 ✓ {mention.linked_family_member_name || 'Linked'}
@@ -451,19 +437,11 @@ export default function StoryReview() {
     };
   }, [token, storyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleEditTranscript(segmentId, editedText) {
+  async function handleTranscriptSave(patch) {
     try {
-      await updateSegment(token, storyId, 'transcript-segments', segmentId, editedText);
+      await updateStory(token, storyId, patch);
     } catch {
-      // Non-blocking: the textarea already reflects the edit
-    }
-  }
-
-  async function handleEditTranslation(segmentId, editedText) {
-    try {
-      await updateSegment(token, storyId, 'translation-segments', segmentId, editedText);
-    } catch {
-      // Non-blocking
+      // Non-blocking: textarea already reflects the edit
     }
   }
 
@@ -600,8 +578,7 @@ export default function StoryReview() {
   const isLockedByOther =
     story.lock?.keeper_name && story.lock.keeper_name !== story.current_keeper_name;
 
-  const audioUrl = story.audio_url;
-  const segments = story.segments ?? [];
+  const audioUrl = story.audio_file?.storage_url;
   const titleSuggestions = story.title_suggestions ?? [];
   const tags = story.story_tags ?? [];
   const mentions = story.ai_people_mentions ?? [];
@@ -690,20 +667,17 @@ export default function StoryReview() {
           </div>
 
           <div className="transcript-cols">
-            {segments.length === 0 && (
+            {(story.transcript_segments ?? []).length === 0 && !story.transcript_edited ? (
               <div style={{ color: 'var(--faint)', fontSize: '12px' }}>
                 No transcript segments yet.
               </div>
-            )}
-            {segments.map((seg) => (
-              <SegmentRow
-                key={seg.transcript?.id ?? seg.translation?.id}
-                segment={seg}
-                onEditTranscript={handleEditTranscript}
-                onEditTranslation={handleEditTranslation}
+            ) : (
+              <TranscriptEditor
+                story={story}
                 mobileLang={mobileLang}
+                onSave={handleTranscriptSave}
               />
-            ))}
+            )}
           </div>
         </div>
 
@@ -717,6 +691,7 @@ export default function StoryReview() {
               <div
                 key={sug.id ?? idx}
                 className={`title-option ${selectedSuggestionIdx === idx ? 'selected' : ''}`}
+                aria-label={`Title option ${idx + 1}: ${sug.title_en}${sug.title_kh ? ` / ${sug.title_kh}` : ''}`}
                 onClick={() => {
                   setSelectedSuggestionIdx(idx);
                   setCustomTitleEn('');
@@ -746,6 +721,7 @@ export default function StoryReview() {
             {/* Custom title */}
             <div
               className={`title-option ${selectedSuggestionIdx === null ? 'selected' : ''}`}
+              aria-label="Custom title"
               onClick={() => setSelectedSuggestionIdx(null)}
               role="radio"
               tabIndex={0}

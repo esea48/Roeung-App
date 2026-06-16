@@ -19,7 +19,7 @@ import httpx
 import librosa
 import numpy as np
 from openai import OpenAI
-from sqlmodel import Session, select
+from sqlmodel import Session, delete, select
 
 from app.core.config import get_settings
 from app.db import engine
@@ -114,7 +114,18 @@ def _get_audio_file(session: Session, story: Story) -> AudioFile:
     return audio_file
 
 
+def _replace_story_rows(session: Session, model, story_id: uuid.UUID) -> None:
+    """Delete any prior rows for a story before recreating them.
+
+    The pipeline is retryable, so insertion steps need to be idempotent.
+    Clearing a step's rows before re-adding them keeps retries from
+    duplicating transcript, translation, title, or people rows.
+    """
+    session.exec(delete(model).where(model.story_id == story_id))
+
+
 _GOOGLE_LANG = {"kh": "km"}  # internal code → BCP 47 code expected by Google
+_WHISPER_LANG = {"kh": "km", "en": "en"}  # internal code → ISO 639-1 expected by Whisper
 
 
 def _translate_text(text: str, source: Language, target: Language) -> str:
@@ -211,6 +222,7 @@ async def _transcribe(session: Session, story: Story) -> None:
 
     audio_file = _get_audio_file(session, story)
     audio_bytes = download_audio_file(audio_file.storage_key)
+    _replace_story_rows(session, TranscriptSegment, story.id)
 
     _MIME_TO_EXT = {
         "audio/webm": "webm", "audio/mp4": "mp4", "audio/mpeg": "mp3",
@@ -225,11 +237,13 @@ async def _transcribe(session: Session, story: Story) -> None:
         base_mime = (audio_file.mime_type or "").split(";")[0].strip()
         extension = _MIME_TO_EXT.get(base_mime, "webm")
 
+    whisper_lang = _WHISPER_LANG.get(story.audio_language.value) if story.audio_language else None
     transcription = _openai_client().audio.transcriptions.create(
         model="whisper-1",
         file=(f"audio.{extension}", audio_bytes, audio_file.mime_type or "application/octet-stream"),
         response_format="verbose_json",
         timestamp_granularities=["word", "segment"],
+        **({"language": whisper_lang} if whisper_lang else {}),
     )
 
     words = [
@@ -279,6 +293,7 @@ async def _translate(session: Session, story: Story) -> None:
         .where(TranscriptSegment.story_id == story.id)
         .order_by(TranscriptSegment.segment_index)
     ).all()
+    _replace_story_rows(session, TranslationSegment, story.id)
 
     for segment in transcript_segments:
         target_language = Language.en if segment.language == Language.kh else Language.kh
@@ -368,6 +383,7 @@ async def _generate_titles(session: Session, story: Story) -> None:
         return
 
     transcript_text = "\n".join(segment.original_text for segment in transcript_segments)
+    _replace_story_rows(session, TitleSuggestion, story.id)
 
     result = _chat_json(
         system=(
@@ -415,6 +431,7 @@ async def _flag_people(session: Session, story: Story) -> None:
         return
 
     transcript_text = "\n".join(segment.original_text for segment in transcript_segments)
+    _replace_story_rows(session, AIPeopleMention, story.id)
 
     result = _chat_json(
         system=(

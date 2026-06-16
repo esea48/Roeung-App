@@ -13,6 +13,7 @@ const CaptureCtx = createContext(null);
 const initialState = {
   lang: 'en',
   path: 'record', // 'record' | 'upload'
+  audioLang: 'kh', // 'kh' | 'en' — language of the audio, set by recorder at capture
   narratorId: null,
   narratorName: '',
   familyMembers: [],
@@ -30,6 +31,7 @@ export function CaptureProvider({ accessToken, children }) {
 
   const setLang = useCallback((lang) => setState((s) => ({ ...s, lang })), []);
   const setPath = useCallback((path) => setState((s) => ({ ...s, path })), []);
+  const setAudioLang = useCallback((audioLang) => setState((s) => ({ ...s, audioLang })), []);
   const setNarrator = useCallback(
     (narratorId, narratorName) => setState((s) => ({ ...s, narratorId, narratorName })),
     []
@@ -63,6 +65,7 @@ export function CaptureProvider({ accessToken, children }) {
       narrator_name_raw: state.narratorName || 'Unknown',
       consent_wording_key: state.path === 'record' ? 'v1_recorded' : 'v1_uploaded',
       consented_at: consentedAt.toISOString(),
+      audio_language: state.audioLang,
     });
     setState((s) => ({
       ...s,
@@ -124,6 +127,7 @@ export function CaptureProvider({ accessToken, children }) {
       accessToken,
       setLang,
       setPath,
+      setAudioLang,
       setNarrator,
       loadFamilyData,
       agreeConsent,
@@ -140,6 +144,7 @@ export function CaptureProvider({ accessToken, children }) {
       accessToken,
       setLang,
       setPath,
+      setAudioLang,
       setNarrator,
       loadFamilyData,
       agreeConsent,

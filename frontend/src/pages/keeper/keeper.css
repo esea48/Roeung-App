@@ -800,6 +800,15 @@
   background: var(--warn-bg);
 }
 
+.transcript-full-area {
+  min-height: 400px;
+  resize: vertical;
+}
+
+.segment-row.transcript-full {
+  align-items: stretch;
+}
+
 .segment-warn-note {
   font-size: 10px;
   color: var(--warn-strong);

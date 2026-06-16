@@ -77,6 +77,8 @@ class StoryUpdateRequest(BaseModel):
     translation_flagged: Optional[bool] = None
     chapter_id: Optional[uuid.UUID] = None
     chapter_sort_order: Optional[int] = None
+    transcript_edited: Optional[str] = None
+    translation_edited: Optional[str] = None
 
 
 class SegmentUpdateRequest(BaseModel):
@@ -159,11 +161,9 @@ class TranslationSegmentResponse(BaseModel):
 class TitleSuggestionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID
-    story_id: uuid.UUID
-    language: Language
     suggestion_index: int
-    text: str
+    title_en: str
+    title_kh: Optional[str] = None
     selected: bool
 
 
@@ -219,6 +219,9 @@ class KeeperStoryDetailResponse(BaseModel):
     archived_at: Optional[datetime]
     archived_by: Optional[uuid.UUID]
     updated_at: datetime
+
+    transcript_edited: Optional[str] = None
+    translation_edited: Optional[str] = None
 
     audio_file: Optional[AudioFileResponse] = None
     transcript_segments: list[TranscriptSegmentResponse] = []

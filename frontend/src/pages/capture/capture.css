@@ -977,6 +977,35 @@
   gap: 10px;
 }
 
+/* ── Audio language picker (Home screen) ─────────────────── */
+
+.audio-lang-picker {
+  margin-bottom: 20px;
+}
+
+.audio-lang-options {
+  display: flex;
+  gap: 8px;
+}
+
+.audio-lang-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: 600 13px var(--font-sans);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.audio-lang-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ── Misc ────────────────────────────────────────────────── */
 
 .error-banner {

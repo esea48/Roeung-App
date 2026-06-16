@@ -41,6 +41,8 @@ export const strings = {
     sendError: 'Something went wrong sending your story. Please try again.',
     sentTitle: 'Your story is with the Keepers', sentBody: 'The Sea family Keepers have been notified and will review it soon.',
     reviewTime: 'Estimated review time: 1–3 days', recordAnother: 'Record another story', backHome: 'Back to home',
+    audioLangLabel: 'What language is the story in?',
+    audioLangKh: 'ខ្មែរ Khmer', audioLangEn: 'English',
     minWord: 'min', secWord: 'sec', noTags: '—',
   },
   kh: {
@@ -80,6 +82,8 @@ export const strings = {
     sendError: '',
     sentTitle: 'រឿងរបស់អ្នកនៅជាមួយអ្នកថែរក្សាហើយ', sentBody: 'អ្នកថែរក្សាគ្រួសារ Sea ត្រូវបានជូនដំណឹង ហើយនឹងត្រួតពិនិត្យវាឆាប់ៗ។',
     reviewTime: 'ពេលត្រួតពិនិត្យ៖ ១–៣ ថ្ងៃ', recordAnother: 'ថតរឿងមួយទៀត', backHome: 'ត្រឡប់ទៅដើម',
+    audioLangLabel: 'រឿងនេះនិយាយជាភាសាអ្វី?',
+    audioLangKh: 'ខ្មែរ Khmer', audioLangEn: 'English',
     minWord: 'នាទី', secWord: 'វិនាទី', noTags: '—',
   },
 };
