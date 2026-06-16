@@ -67,6 +67,7 @@ def get_current_keeper(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    settings = get_settings()
     try:
         jwks_client = _get_jwks_client()
         signing_key = jwks_client.get_signing_key_from_jwt(credentials.credentials)
@@ -77,11 +78,19 @@ def get_current_keeper(
             audience="authenticated",
         )
     except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        try:
+            payload = jwt.decode(
+                credentials.credentials,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        except jwt.PyJWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
     subject = payload.get("sub")
     try:

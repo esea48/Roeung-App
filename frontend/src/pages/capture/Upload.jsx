@@ -23,14 +23,15 @@ function readDuration(file) {
     const url = URL.createObjectURL(file);
     const audio = new Audio();
     audio.src = url;
+    const cleanup = (duration) => {
+      audio.src = '';
+      URL.revokeObjectURL(url);
+      resolve(duration);
+    };
     audio.addEventListener('loadedmetadata', () => {
-      resolve(Number.isFinite(audio.duration) ? audio.duration : 0);
-      URL.revokeObjectURL(url);
+      cleanup(Number.isFinite(audio.duration) ? audio.duration : 0);
     });
-    audio.addEventListener('error', () => {
-      resolve(0);
-      URL.revokeObjectURL(url);
-    });
+    audio.addEventListener('error', () => cleanup(0));
   });
 }
 

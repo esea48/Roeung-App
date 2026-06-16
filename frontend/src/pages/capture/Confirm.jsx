@@ -17,15 +17,16 @@ export default function Confirm() {
   const [error, setError] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const audioRef = useRef(null);
-  const urlRef = useRef(null);
 
   useEffect(() => {
     if (!audio?.blob) return;
-    urlRef.current = URL.createObjectURL(audio.blob);
+    const url = URL.createObjectURL(audio.blob);
     const el = audioRef.current;
-    el.src = urlRef.current;
+    el.src = url;
     return () => {
-      URL.revokeObjectURL(urlRef.current);
+      el.pause();
+      el.src = '';
+      URL.revokeObjectURL(url);
     };
   }, [audio]);
 

@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Bash(npm ls *)",
+      "Bash(find / -maxdepth 6 -name \"playwright\" -type d)",
+      "Bash(npx --yes playwright@1.61.0 screenshot --viewport-size=420,850 --wait-for-timeout=1000 \"http://localhost:5173/f/test-token/capture\" /tmp/home-mobile.png)",
+      "Bash(npx --yes playwright@1.61.0 install chromium)",
+      "Bash(npx --yes playwright@1.61.0 screenshot --viewport-size=1280,900 --wait-for-timeout=1000 \"http://localhost:5173/f/test-token/capture\" /tmp/home-desktop.png)",
+      "Bash(find / -maxdepth 8 -path \"*ms-playwright*\" -prune -o -name \"playwright-core\" -type d -print 2>/dev/null | head -3 *)",
+      "Read(//Users/ellensea/**)",
+      "Bash(NODE_PATH=/Users/ellensea/.npm/_npx/48b1ca104c3549f4/node_modules node -e ' *)",
+      "Bash(curl -s http://localhost:5173/f/test-token/capture)",
+      "Bash(redis-cli ping *)",
+      "Bash(curl -s http://localhost:8000/f/test-token/family-members)",
+      "Bash(python3)",
+      "Bash(git -C \"/Users/ellensea/Claude/Projects/Roeung App\" status)",
+      "Bash(git -C \"/Users/ellensea/Claude/Projects/Roeung App\" log --oneline -5)",
+      "Bash(git -C \"/Users/ellensea/Claude/Projects/Roeung App\" diff backend/ frontend/src/App.jsx frontend/src/api/client.js)",
+      "Bash(git -C '/Users/ellensea/Claude/Projects/Roeung App' add backend/app/api/book.py backend/app/schemas/book.py frontend/src/App.jsx frontend/src/api/client.js frontend/src/pages/book/BookApp.jsx frontend/src/pages/book/BookChapter.jsx frontend/src/pages/book/BookContext.jsx frontend/src/pages/book/BookHome.jsx frontend/src/pages/book/BookStory.jsx frontend/src/pages/book/book.css docs/prototypes/Prototype-README.md)",
+      "Bash(git -C '/Users/ellensea/Claude/Projects/Roeung App' commit -m ' *)",
+      "Bash(git -C \"/Users/ellensea/Claude/Projects/Roeung App\" push)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx playwright *)",
+      "Bash(node screenshot.js)",
+      "Bash(curl -s http://localhost:5175/)",
+      "Bash(curl -s http://localhost:5175/f/demo123/book/)",
+      "Bash(pkill -f \"vite --port\")",
+      "Bash(pkill -f \"vite$\")",
+      "Bash(echo \"Frontend PID: $!\")",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -sf http://localhost:5175/)",
+      "Bash(brew install *)",
+      "Bash(python3.12 --version)",
+      "Bash(pkill -f \"uvicorn app.main:app\")",
+      "Bash(python3.12 -m venv venv)",
+      "Bash(curl -s http://localhost:8000/docs)",
+      "Bash(brew list *)",
+      "Bash(curl -v -X POST \"http://localhost:8000/f/UDo21SAbFXlh71shQIUui--MEgqYH5Rd4SeZzDrCHPE/stories/0fbb8cb2-0f1a-4f71-a66a-233ea4923660/audio\" -F \"file=@test_audio.webm;type=audio/webm\")"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
+    ]
+  }
+}

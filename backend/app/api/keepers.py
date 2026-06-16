@@ -14,6 +14,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.api.deps import get_current_keeper, verify_keeper_family
+from app.services.storage import get_signed_url
 from app.db import get_session
 from app.models import (
     AIPeopleMention,
@@ -30,6 +31,7 @@ from app.models import (
 )
 from app.models.common import utcnow
 from app.models.enums import MentionResolutionStatus, StoryStatus, TaggedBy
+from app.models.enums import Language
 from app.schemas.family_members import FamilyMemberResponse
 from app.schemas.keepers import (
     AudioFileResponse,
@@ -470,6 +472,7 @@ def get_story_detail(
 
     title_suggestions = session.exec(
         select(TitleSuggestion).where(TitleSuggestion.story_id == story.id)
+        .order_by(TitleSuggestion.suggestion_index.asc(), TitleSuggestion.language.asc())
     ).all()
 
     ai_people_mentions = session.exec(
@@ -499,10 +502,32 @@ def get_story_detail(
         )
 
     result = KeeperStoryDetailResponse.model_validate(story)
-    result.audio_file = AudioFileResponse.model_validate(audio_file) if audio_file else None
+    if audio_file:
+        audio_response = AudioFileResponse.model_validate(audio_file)
+        if audio_file.storage_key and not audio_file.storage_url:
+            audio_response.storage_url = get_signed_url(audio_file.storage_key)
+        result.audio_file = audio_response
+    else:
+        result.audio_file = None
     result.transcript_segments = [TranscriptSegmentResponse.model_validate(s) for s in transcript_segments]
     result.translation_segments = [TranslationSegmentResponse.model_validate(s) for s in translation_segments]
-    result.title_suggestions = [TitleSuggestionResponse.model_validate(t) for t in title_suggestions]
+    grouped_titles: dict[int, dict[str, object]] = {}
+    for suggestion in title_suggestions:
+        # Store bilingual options under the shared suggestion index.
+        item = grouped_titles.setdefault(
+            suggestion.suggestion_index,
+            {"suggestion_index": suggestion.suggestion_index, "title_en": "", "title_kh": None, "selected": False},
+        )
+        if suggestion.language == Language.en:
+            item["title_en"] = suggestion.text
+        elif suggestion.language == Language.kh:
+            item["title_kh"] = suggestion.text
+        item["selected"] = bool(item["selected"]) or suggestion.selected
+
+    result.title_suggestions = [
+        TitleSuggestionResponse.model_validate(grouped_titles[index])
+        for index in sorted(grouped_titles)
+    ]
     result.ai_people_mentions = [MentionResponse.model_validate(m) for m in ai_people_mentions]
     result.story_tags = [StoryTagResponse.model_validate(t) for t in story_tags]
     result.lock = lock_info

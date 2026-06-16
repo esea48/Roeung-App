@@ -5,27 +5,50 @@ from datetime import datetime, timezone
 
 import pytest
 
-os.environ.setdefault("DATABASE_URL", "sqlite://")
-os.environ["SUPABASE_JWT_SECRET"] = "test-supabase-jwt-secret-at-least-32-bytes-long"
-
 from sqlalchemy.dialects.postgresql import JSONB  # noqa: E402
 from sqlalchemy.ext.compiler import compiles  # noqa: E402
 from sqlmodel import Session, SQLModel, create_engine  # noqa: E402
 
 from app.core.config import get_settings  # noqa: E402
+
+os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["SUPABASE_JWT_SECRET"] = "test-supabase-jwt-secret-at-least-32-bytes-long"
+os.environ["REDIS_URL"] = "redis://localhost:6379"
+os.environ["SUPABASE_URL"] = "http://localhost"
+os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key"
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["GOOGLE_TRANSLATE_API_KEY"] = ""
+from app.core import config as app_config  # noqa: E402
+
+app_config.Settings.database_url = "sqlite://"
+app_config.Settings.supabase_jwt_secret = os.environ["SUPABASE_JWT_SECRET"]
+app_config.Settings.redis_url = os.environ["REDIS_URL"]
+app_config.Settings.supabase_url = os.environ["SUPABASE_URL"]
+app_config.Settings.supabase_service_role_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+app_config.Settings.openai_api_key = os.environ["OPENAI_API_KEY"]
+app_config.Settings.google_translate_api_key = os.environ["GOOGLE_TRANSLATE_API_KEY"]
+get_settings.cache_clear()
+
+import app.db as app_db  # noqa: E402
+from app.services import ai_pipeline as ai_pipeline_service  # noqa: E402
 from app.models import (  # noqa: E402
     AIPeopleMention,
     Chapter,
+    ConsentLog,
+    ConsentWordingVersion,
+    DeletionRequest,
     Family,
     FamilyMember,
     Keeper,
     KeeperLock,
     Story,
     StoryTag,
+    AudioFile,
+    TitleSuggestion,
     TranscriptSegment,
     TranslationSegment,
 )
-from app.models.enums import CaptureMethod, StoryStatus  # noqa: E402
+from app.models.enums import CaptureMethod, Language, StoryStatus  # noqa: E402
 
 get_settings.cache_clear()
 
@@ -37,8 +60,10 @@ def _compile_jsonb_sqlite(type_, compiler, **kw):
 
 
 @pytest.fixture()
-def session():
+def session(monkeypatch):
     engine = create_engine("sqlite://")
+    monkeypatch.setattr(app_db, "engine", engine)
+    monkeypatch.setattr(ai_pipeline_service, "engine", engine)
     SQLModel.metadata.create_all(
         engine,
         tables=[
@@ -46,15 +71,39 @@ def session():
             Keeper.__table__,
             FamilyMember.__table__,
             Chapter.__table__,
+            ConsentWordingVersion.__table__,
+            ConsentLog.__table__,
             Story.__table__,
+            AudioFile.__table__,
             KeeperLock.__table__,
             StoryTag.__table__,
             AIPeopleMention.__table__,
             TranscriptSegment.__table__,
             TranslationSegment.__table__,
+            TitleSuggestion.__table__,
+            DeletionRequest.__table__,
         ],
     )
     with Session(engine) as session:
+        session.add_all(
+            [
+                ConsentWordingVersion(
+                    key="v1_recorded",
+                    capture_method=CaptureMethod.recorded,
+                    language=Language.en,
+                    text="Recorded consent",
+                    effective_from=datetime.now(timezone.utc),
+                ),
+                ConsentWordingVersion(
+                    key="v1_uploaded",
+                    capture_method=CaptureMethod.uploaded,
+                    language=Language.en,
+                    text="Uploaded consent",
+                    effective_from=datetime.now(timezone.utc),
+                ),
+            ]
+        )
+        session.commit()
         yield session
 
 
