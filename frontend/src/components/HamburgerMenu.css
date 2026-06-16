@@ -1,0 +1,177 @@
+/* ── Design tokens (matches README.md + keeper.css) ──────────────────────── */
+.ham-panel {
+  --ink:        #2a2620;
+  --body:       #6f685b;
+  --faint:      #8c8576;
+  --surface:    #faf8f3;
+  --surface2:   #f3f1ea;
+  --surface3:   #ffffff;
+  --sand:       #e9e3d6;
+  --sand2:      #d9d4c9;
+  --clay:       #a3623e;
+  --warn-strong: #d97706;
+  --hairline:   rgba(42, 38, 32, 0.08);
+  --font-sans:  'Hanken Grotesk', sans-serif;
+  --font-kh:    'Noto Serif Khmer', serif;
+}
+
+/* ── Scrim ───────────────────────────────────────────────────────────────── */
+.ham-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 38, 32, 0.4);
+  z-index: 40;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+.ham-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: var(--surface2);
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 24px -8px rgba(42, 38, 32, 0.3);
+  animation: ham-slide-in 200ms ease;
+  overflow-y: auto;
+}
+
+@keyframes ham-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Header: logo + close ────────────────────────────────────────────────── */
+.ham-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 14px 12px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.ham-logo {
+  font: 500 13px var(--font-sans);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ham-logo-mark {
+  color: var(--clay);
+  font-size: 15px;
+}
+
+.ham-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--faint);
+  font-size: 13px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.ham-close:hover {
+  color: var(--ink);
+  background: var(--sand);
+}
+
+/* ── Nav items — identical to .sidebar-item in keeper.css ───────────────── */
+.ham-nav {
+  padding: 8px;
+  flex: 1;
+}
+
+.ham-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font: 500 13px var(--font-sans);
+  color: var(--body);
+  cursor: pointer;
+  margin-bottom: 2px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  gap: 7px;
+}
+
+.ham-item:hover {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+.ham-item.active {
+  background: var(--surface3);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 3px 10px -7px rgba(42, 38, 32, 0.3);
+}
+
+.ham-item-label {
+  flex: 1;
+}
+
+/* ── Badges — identical to .sidebar-badge in keeper.css ─────────────────── */
+.ham-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.ham-badge-neutral {
+  background: var(--sand2);
+  color: var(--body);
+}
+
+.ham-badge-warn {
+  background: var(--warn-strong);
+  color: #fff;
+}
+
+/* ── Footer: language toggle ─────────────────────────────────────────────── */
+.ham-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+
+.ham-lang-toggle {
+  display: flex;
+  background: var(--sand);
+  border-radius: 20px;
+  padding: 2px;
+  width: fit-content;
+}
+
+.ham-lang-toggle button {
+  padding: 5px 13px;
+  border: none;
+  cursor: pointer;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--faint);
+  font: 600 11px var(--font-sans);
+}
+
+.ham-lang-toggle button.active {
+  background: var(--ink);
+  color: var(--surface2);
+}
+
+.ham-lang-toggle button.kh {
+  font: 500 12px var(--font-kh);
+}

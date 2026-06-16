@@ -1,9 +1,16 @@
+import { useRef, useState } from 'react';
 import { useCapture } from '../CaptureContext';
 import LangToggle from './LangToggle';
+import HamburgerMenu from '../../../components/HamburgerMenu';
+import { createFamilyNavConfig } from '../../../components/navConfig';
 import '../capture.css';
 
 export default function Shell({ children }) {
-  const { lang } = useCapture();
+  const { lang, setLang, accessToken } = useCapture();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const hamburgerRef = useRef(null);
+  const navItems = createFamilyNavConfig(accessToken);
+
   return (
     <div className="capture" data-lang={lang}>
       <div className="capture-bar">
@@ -12,10 +19,30 @@ export default function Shell({ children }) {
           <span className="capture-logo-kh">រឿង</span>
         </div>
         <LangToggle />
+        <button
+          ref={hamburgerRef}
+          type="button"
+          className="capture-hamburger"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open navigation menu"
+          aria-expanded={menuOpen}
+        >
+          ☰
+        </button>
       </div>
       <div className="capture-body">
         <div className="capture-card">{children}</div>
       </div>
+
+      {menuOpen && (
+        <HamburgerMenu
+          items={navItems}
+          lang={lang}
+          setLang={setLang}
+          onClose={() => setMenuOpen(false)}
+          triggerRef={hamburgerRef}
+        />
+      )}
     </div>
   );
 }

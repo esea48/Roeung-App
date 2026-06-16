@@ -44,7 +44,7 @@ function fmtPublishedDate(isoDate) {
 }
 
 export default function BookHome() {
-  const { accessToken, lang, book, loading, error } = useBook();
+  const { basePath, lang, book, loading, error } = useBook();
   const navigate = useNavigate();
   const pageRef = useRef(null);
 
@@ -62,19 +62,19 @@ export default function BookHome() {
   const { chapters = [], recent_stories = [] } = book;
 
   const goToChapter = (chapterId) => {
-    navigate(`/f/${accessToken}/book/chapter/${chapterId}`, {
+    navigate(`${basePath}/chapter/${chapterId}`, {
       state: { crumb: null },
     });
   };
 
   const goToUncategorised = () => {
-    navigate(`/f/${accessToken}/book/chapter/uncategorised`, {
+    navigate(`${basePath}/chapter/uncategorised`, {
       state: { crumb: null },
     });
   };
 
   const goToStory = (storyId, storyTitle) => {
-    navigate(`/f/${accessToken}/book/story/${storyId}`, {
+    navigate(`${basePath}/story/${storyId}`, {
       state: {
         crumb: `⟩ ${storyTitle || 'Story'}`,
         storyIds: recent_stories.map((s) => s.id),

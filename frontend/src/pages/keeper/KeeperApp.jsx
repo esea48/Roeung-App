@@ -4,9 +4,13 @@ import { KeeperProvider, useKeeper } from './KeeperContext';
 import KeeperLogin from './KeeperLogin';
 import KeeperQueue from './KeeperQueue';
 import StoryReview from './StoryReview';
+import BookApp from '../book/BookApp';
+import { createKeeperNavConfig, isActive } from '../../components/navConfig.js';
 import './keeper.css';
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
+
+const SIDEBAR_ICONS = { queue: '📥', flagged: '⚠', book: '📖', members: '👤', chapters: '🗂' };
 
 function Sidebar({ onNav }) {
   const navigate = useNavigate();
@@ -22,12 +26,31 @@ function Sidebar({ onNav }) {
     onNav?.();
   }
 
-  const isQueue =
-    location.pathname === '/keeper' || location.pathname === '/keeper/';
-  const isStory = location.pathname.startsWith('/keeper/story/');
+  const navItems = createKeeperNavConfig(stats);
+  const reviewItems = navItems.filter((i) => i.section === 'review');
+  const contentItems = navItems.filter((i) => i.section === 'content');
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Keeper';
   const email = user?.email || '';
+
+  function renderItem(item) {
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={`sidebar-item ${isActive(location, item) ? 'active' : ''}`}
+        onClick={() => nav(item.route)}
+      >
+        <span className="sidebar-item-icon">{SIDEBAR_ICONS[item.id]}</span>
+        <span className="sidebar-item-label">{item.labelEn}</span>
+        {item.badge > 0 && (
+          <span className={`sidebar-badge sidebar-badge-${item.badgeType}`}>
+            {item.badge}
+          </span>
+        )}
+      </button>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -41,32 +64,7 @@ function Sidebar({ onNav }) {
       {/* Review section */}
       <div className="sidebar-section-label">Review</div>
       <nav className="sidebar-nav">
-        <button
-          type="button"
-          className={`sidebar-item ${isQueue || isStory ? 'active' : ''}`}
-          onClick={() => nav('/keeper')}
-        >
-          <span className="sidebar-item-icon">📥</span>
-          <span className="sidebar-item-label">Queue</span>
-          {stats.awaiting_review > 0 && (
-            <span className="sidebar-badge sidebar-badge-neutral">{stats.awaiting_review}</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`sidebar-item ${location.search === '?filter=flagged' ? 'active' : ''}`}
-          onClick={() => {
-            navigate('/keeper?filter=flagged');
-            onNav?.();
-          }}
-        >
-          <span className="sidebar-item-icon">⚠</span>
-          <span className="sidebar-item-label">Flagged</span>
-          {stats.flagged > 0 && (
-            <span className="sidebar-badge sidebar-badge-warn">{stats.flagged}</span>
-          )}
-        </button>
+        {reviewItems.map(renderItem)}
       </nav>
 
       <div className="sidebar-divider" />
@@ -74,32 +72,7 @@ function Sidebar({ onNav }) {
       {/* Content section */}
       <div className="sidebar-section-label">Content</div>
       <nav className="sidebar-nav">
-        <button
-          type="button"
-          className="sidebar-item"
-          onClick={() => nav('/keeper/book')}
-        >
-          <span className="sidebar-item-icon">📖</span>
-          <span className="sidebar-item-label">Book</span>
-        </button>
-
-        <button
-          type="button"
-          className="sidebar-item"
-          onClick={() => nav('/keeper/members')}
-        >
-          <span className="sidebar-item-icon">👤</span>
-          <span className="sidebar-item-label">Members</span>
-        </button>
-
-        <button
-          type="button"
-          className="sidebar-item"
-          onClick={() => nav('/keeper/chapters')}
-        >
-          <span className="sidebar-item-icon">🗂</span>
-          <span className="sidebar-item-label">Chapters</span>
-        </button>
+        {contentItems.map(renderItem)}
       </nav>
 
       {/* Keeper identity + logout */}
@@ -152,6 +125,13 @@ function Drawer({ open, onClose }) {
   );
 }
 
+// ── Keeper book wrapper ───────────────────────────────────────────────────────
+
+function KeeperBookWrapper() {
+  const { token } = useKeeper();
+  return <BookApp keeperToken={token} />;
+}
+
 // ── Shell: sidebar + main ─────────────────────────────────────────────────────
 
 function KeeperShell() {
@@ -173,7 +153,7 @@ function KeeperShell() {
         <Routes>
           <Route index element={<KeeperQueue />} />
           <Route path="story/:storyId" element={<StoryReview />} />
-          <Route path="book" element={<PlaceholderPage title="Book" />} />
+          <Route path="book/*" element={<KeeperBookWrapper />} />
           <Route path="members" element={<PlaceholderPage title="Family Members" />} />
           <Route path="chapters" element={<PlaceholderPage title="Chapters" />} />
           <Route path="*" element={<Navigate to="/keeper" replace />} />

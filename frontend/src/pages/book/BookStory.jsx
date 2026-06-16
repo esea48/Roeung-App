@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useBook } from './BookContext';
-import { getStoryDetail } from '../../api/client';
 
 /* ── Waveform ─────────────────────────────────────────────── */
 
@@ -68,7 +67,7 @@ function PersonChip({ tag, lang }) {
 const SPEEDS = [0.75, 1, 1.25];
 
 export default function BookStory() {
-  const { accessToken, lang } = useBook();
+  const { basePath, lang, fetchStoryDetail } = useBook();
   const { storyId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,7 +98,7 @@ export default function BookStory() {
     setDuration(0);
     setActiveIdx(-1);
 
-    getStoryDetail(accessToken, storyId)
+    fetchStoryDetail(storyId)
       .then((data) => {
         if (!cancelled) setStory(data);
       })
@@ -113,7 +112,7 @@ export default function BookStory() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, storyId]);
+  }, [fetchStoryDetail, storyId]);
 
   // Pair transcript_segments with translation_segments by segment_index
   const sentences = useMemo(() => {
@@ -234,7 +233,7 @@ export default function BookStory() {
   const nextId = currentIdx < storyIds.length - 1 ? storyIds[currentIdx + 1] : null;
 
   const goToStory = (id) => {
-    navigate(`/f/${accessToken}/book/story/${id}`, {
+    navigate(`${basePath}/story/${id}`, {
       state: {
         crumb,
         storyIds,
@@ -296,17 +295,57 @@ export default function BookStory() {
               <> · {Math.round(story.duration_seconds / 60)} min</>
             )}
           </div>
-          {story.translation_flagged && (
-            <div className="book-flag-banner">
-              <span className="book-flag-icon">⚠</span>
-              <span>
-                {lang === 'en'
-                  ? 'This translation may not capture all the nuances of the original Khmer.'
-                  : 'ការបកប្រែនេះអាចមិនបង្ហាញអត្ថន័យពេញលេញនៃខ្មែរដើមឡើយ។'}
-              </span>
-            </div>
-          )}
         </div>
+
+        {/* Audio player — inline, above the translation flag */}
+        <div className="book-player-track">
+          <button
+            type="button"
+            className={`book-player-play${playing ? ' playing' : ''}`}
+            onClick={togglePlay}
+            disabled={!hasAudio}
+            aria-label={playing ? 'Pause' : 'Play'}
+          >
+            {playing ? '❚❚' : '▶'}
+          </button>
+
+          <div className="book-player-wave">
+            <PlayerWave
+              count={52}
+              barW={3}
+              gap={2}
+              maxH={28}
+              progress={progress}
+              onSeek={hasAudio ? seekToFraction : null}
+            />
+          </div>
+
+          <span className="book-player-time">
+            {fmtTime(currentTime)}
+            {duration > 0 && ` / ${fmtTime(duration)}`}
+          </span>
+
+          <button
+            type="button"
+            className="book-player-speed"
+            onClick={cycleSpeed}
+            aria-label={`Playback speed: ${SPEEDS[speedIdx]}×`}
+          >
+            {SPEEDS[speedIdx]}×
+          </button>
+        </div>
+
+        {/* Translation flag — appears below player */}
+        {story.translation_flagged && (
+          <div className="book-flag-banner">
+            <span className="book-flag-icon">⚠</span>
+            <span>
+              {lang === 'en'
+                ? 'This translation may not capture all the nuances of the original Khmer.'
+                : 'ការបកប្រែនេះអាចមិនបង្ហាញអត្ថន័យពេញលេញនៃខ្មែរដើមឡើយ។'}
+            </span>
+          </div>
+        )}
 
         {/* Bilingual transcript */}
         <div className="book-transcript">
@@ -378,69 +417,29 @@ export default function BookStory() {
         )}
       </div>
 
-      {/* Audio player + prev/next — sticky on mobile, inline on desktop */}
-      <div className="book-player">
-        <div className="book-player-track">
-          <button
-            type="button"
-            className={`book-player-play${playing ? ' playing' : ''}`}
-            onClick={togglePlay}
-            disabled={!hasAudio}
-            aria-label={playing ? 'Pause' : 'Play'}
-          >
-            {playing ? '❚❚' : '▶'}
-          </button>
+      {/* Prev / Next navigation */}
+      <div className="book-story-nav">
+        <button
+          type="button"
+          className="book-story-nav-btn"
+          onClick={() => prevId && goToStory(prevId)}
+          disabled={!prevId}
+        >
+          ← {lang === 'en' ? 'Prev story' : 'រឿងមុន'}
+        </button>
 
-          <div className="book-player-wave">
-            <PlayerWave
-              count={52}
-              barW={3}
-              gap={2}
-              maxH={28}
-              progress={progress}
-              onSeek={hasAudio ? seekToFraction : null}
-            />
-          </div>
+        {navLabel && (
+          <span className="book-story-nav-pos">{navLabel}</span>
+        )}
 
-          <span className="book-player-time">
-            {fmtTime(currentTime)}
-            {duration > 0 && ` / ${fmtTime(duration)}`}
-          </span>
-
-          <button
-            type="button"
-            className="book-player-speed"
-            onClick={cycleSpeed}
-            aria-label={`Playback speed: ${SPEEDS[speedIdx]}×`}
-          >
-            {SPEEDS[speedIdx]}×
-          </button>
-        </div>
-
-        {/* Prev / Next navigation */}
-        <div className="book-story-nav">
-          <button
-            type="button"
-            className="book-story-nav-btn"
-            onClick={() => prevId && goToStory(prevId)}
-            disabled={!prevId}
-          >
-            ← {lang === 'en' ? 'Prev story' : 'រឿងមុន'}
-          </button>
-
-          {navLabel && (
-            <span className="book-story-nav-pos">{navLabel}</span>
-          )}
-
-          <button
-            type="button"
-            className="book-story-nav-btn"
-            onClick={() => nextId && goToStory(nextId)}
-            disabled={!nextId}
-          >
-            {lang === 'en' ? 'Next story' : 'រឿងបន្ទាប់'} →
-          </button>
-        </div>
+        <button
+          type="button"
+          className="book-story-nav-btn"
+          onClick={() => nextId && goToStory(nextId)}
+          disabled={!nextId}
+        >
+          {lang === 'en' ? 'Next story' : 'រឿងបន្ទាប់'} →
+        </button>
       </div>
     </>
   );

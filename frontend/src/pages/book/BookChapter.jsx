@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useBook } from './BookContext';
-import { getChapterStories, getUncategorisedStories } from '../../api/client';
 
 const LANG_LABELS = { en: 'EN', kh: 'KH', khmer: 'KH' };
 
@@ -18,7 +17,7 @@ function fmtDate(isoDate) {
 }
 
 export default function BookChapter() {
-  const { accessToken, lang, book } = useBook();
+  const { basePath, lang, book, fetchChapterStories, fetchUncategorisedStories } = useBook();
   const { chapterId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,8 +46,8 @@ export default function BookChapter() {
     setError(null);
 
     const fetch = isUncategorised
-      ? getUncategorisedStories(accessToken, sort)
-      : getChapterStories(accessToken, chapterId, sort);
+      ? fetchUncategorisedStories(sort)
+      : fetchChapterStories(chapterId, sort);
 
     fetch
       .then((data) => {
@@ -64,7 +63,7 @@ export default function BookChapter() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, chapterId, isUncategorised, sort]);
+  }, [fetchChapterStories, fetchUncategorisedStories, chapterId, isUncategorised, sort]);
 
   // Filter by language
   const filtered = useMemo(() => {
@@ -75,7 +74,7 @@ export default function BookChapter() {
   }, [stories, langFilter]);
 
   const goToStory = (storyId, storyTitle) => {
-    navigate(`/f/${accessToken}/book/story/${storyId}`, {
+    navigate(`${basePath}/story/${storyId}`, {
       state: {
         crumb: `⟩ ${chapterTitle} ⟩ ${storyTitle || 'Story'}`,
         chapterId: isUncategorised ? 'uncategorised' : chapterId,
@@ -93,7 +92,7 @@ export default function BookChapter() {
         type="button"
         className="book-back-btn"
         onClick={() =>
-          navigate(`/f/${accessToken}/book`, { state: { crumb: null } })
+          navigate(basePath, { state: { crumb: null } })
         }
       >
         ← {lang === 'en' ? 'Home' : 'ដើម'}

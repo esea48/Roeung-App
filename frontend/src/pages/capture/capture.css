@@ -90,6 +90,22 @@
   color: var(--clay);
 }
 
+.capture-hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.capture-hamburger:hover {
+  background: var(--sand);
+}
+
 .capture-body {
   display: flex;
   align-items: flex-start;

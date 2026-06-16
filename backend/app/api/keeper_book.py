@@ -1,25 +1,26 @@
-"""Book Reading endpoints (CLAUDE.md Flow 4).
+"""Keeper Book-preview endpoints (CLAUDE.md Flow 4, accessed via Keeper JWT).
 
-All routes are read-only and scoped to a family via the `/f/{access_token}`
-access-token path, per CLAUDE.md "Auth Model (Two-Tier)". Only `published`
-stories are visible here — anything still in review, archived, unpublished,
-or deleted is never returned.
+Mirrors the read-only book endpoints in book.py but authenticates via the
+Keeper's Supabase JWT instead of a family access token, so a Keeper can
+preview the published book from within the review UI.
+
+Only `published` stories are returned — the same filter applied for family
+members. Pending/in-review stories remain in the Keeper queue only.
 """
 
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, select
-from sqlmodel.sql.expression import SelectOfScalar
 
-from app.api.deps import get_family
+from app.api.deps import get_current_keeper
 from app.db import get_session
-from app.services.storage import get_signed_url
 from app.models import (
     AudioFile,
     Chapter,
     Family,
     FamilyMember,
+    Keeper,
     Story,
     StoryTag,
     TranscriptSegment,
@@ -36,20 +37,20 @@ from app.schemas.book import (
     TranscriptSegmentResponse,
     TranslationSegmentResponse,
 )
+from app.services.storage import get_signed_url
 
-router = APIRouter(prefix="/f/{access_token}", tags=["book"])
+router = APIRouter(prefix="/keeper/book", tags=["keeper-book"])
 
 RECENT_STORIES_LIMIT = 5
 
 
-def _sorted_published_stories(query: SelectOfScalar[Story], sort: SortOrder) -> SelectOfScalar[Story]:
+def _sorted_published_stories(query, sort: SortOrder):
     if sort == "chronological":
         return query.order_by(Story.chapter_sort_order.asc().nulls_last(), Story.published_at.asc())
     return query.order_by(Story.published_at.desc())
 
 
 def _audio_by_story(session: Session, story_ids: list[uuid.UUID]) -> dict[uuid.UUID, AudioFile]:
-    """Fetch original audio files for a list of story IDs, keyed by story_id."""
     if not story_ids:
         return {}
     rows = session.exec(
@@ -74,19 +75,21 @@ def _story_summary(story: Story, audio: AudioFile | None = None) -> StorySummary
     )
 
 
-@router.get("/book", response_model=BookResponse)
-def get_book(
-    family: Family = Depends(get_family),
+@router.get("", response_model=BookResponse)
+def get_keeper_book(
+    keeper: Keeper = Depends(get_current_keeper),
     session: Session = Depends(get_session),
 ) -> BookResponse:
-    """Book Home (4.1): chapters plus the 5 most recently published stories."""
+    """Book Home preview for Keepers: chapters + 5 most recently published stories."""
     chapters = session.exec(
-        select(Chapter).where(Chapter.family_id == family.id).order_by(Chapter.sort_order.asc())
+        select(Chapter)
+        .where(Chapter.family_id == keeper.family_id)
+        .order_by(Chapter.sort_order.asc())
     ).all()
 
     recent_stories = session.exec(
         select(Story)
-        .where(Story.family_id == family.id)
+        .where(Story.family_id == keeper.family_id)
         .where(Story.status == StoryStatus.published)
         .order_by(Story.published_at.desc())
         .limit(RECENT_STORIES_LIMIT)
@@ -101,20 +104,20 @@ def get_book(
 
 
 @router.get("/chapters/{chapter_id}/stories", response_model=list[StorySummaryResponse])
-def get_chapter_stories(
+def get_keeper_chapter_stories(
     chapter_id: uuid.UUID,
     sort: SortOrder = Query("newest"),
-    family: Family = Depends(get_family),
+    keeper: Keeper = Depends(get_current_keeper),
     session: Session = Depends(get_session),
 ) -> list[StorySummaryResponse]:
-    """Chapter view (4.2): published stories in a chapter."""
+    """Chapter view for Keepers: published stories in a chapter."""
     chapter = session.get(Chapter, chapter_id)
-    if chapter is None or chapter.family_id != family.id:
+    if chapter is None or chapter.family_id != keeper.family_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
 
     query = (
         select(Story)
-        .where(Story.family_id == family.id)
+        .where(Story.family_id == keeper.family_id)
         .where(Story.chapter_id == chapter.id)
         .where(Story.status == StoryStatus.published)
     )
@@ -123,16 +126,16 @@ def get_chapter_stories(
     return [_story_summary(s, audio_map.get(s.id)) for s in stories]
 
 
-@router.get("/book/uncategorised", response_model=list[StorySummaryResponse])
-def get_uncategorised_stories(
+@router.get("/uncategorised", response_model=list[StorySummaryResponse])
+def get_keeper_uncategorised_stories(
     sort: SortOrder = Query("newest"),
-    family: Family = Depends(get_family),
+    keeper: Keeper = Depends(get_current_keeper),
     session: Session = Depends(get_session),
 ) -> list[StorySummaryResponse]:
-    """Uncategorised shelf (4.2): published stories with no chapter assigned."""
+    """Uncategorised shelf for Keepers: published stories with no chapter assigned."""
     query = (
         select(Story)
-        .where(Story.family_id == family.id)
+        .where(Story.family_id == keeper.family_id)
         .where(Story.chapter_id.is_(None))
         .where(Story.status == StoryStatus.published)
     )
@@ -142,14 +145,14 @@ def get_uncategorised_stories(
 
 
 @router.get("/stories/{story_id}", response_model=StoryDetailResponse)
-def get_story(
+def get_keeper_story(
     story_id: uuid.UUID,
-    family: Family = Depends(get_family),
+    keeper: Keeper = Depends(get_current_keeper),
     session: Session = Depends(get_session),
 ) -> StoryDetailResponse:
-    """Story page (4.3): full bilingual transcript, translations, and tags."""
+    """Story page for Keepers: full bilingual transcript, translations, and tags."""
     story = session.get(Story, story_id)
-    if story is None or story.family_id != family.id or story.status != StoryStatus.published:
+    if story is None or story.family_id != keeper.family_id or story.status != StoryStatus.published:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Story not found")
 
     transcript_segments = session.exec(

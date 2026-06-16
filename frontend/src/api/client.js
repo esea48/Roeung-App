@@ -96,3 +96,26 @@ export function getUncategorisedStories(accessToken, sort = 'newest') {
 export function getStoryDetail(accessToken, storyId) {
   return request(`/f/${accessToken}/stories/${storyId}`);
 }
+
+function keeperRequest(path, jwt, options = {}) {
+  return request(path, {
+    ...options,
+    headers: { Authorization: `Bearer ${jwt}`, ...options.headers },
+  });
+}
+
+export function getKeeperBook(jwt) {
+  return keeperRequest('/keeper/book', jwt);
+}
+
+export function getKeeperChapterStories(jwt, chapterId, sort = 'newest') {
+  return keeperRequest(`/keeper/book/chapters/${chapterId}/stories?sort=${sort}`, jwt);
+}
+
+export function getKeeperUncategorisedStories(jwt, sort = 'newest') {
+  return keeperRequest(`/keeper/book/uncategorised?sort=${sort}`, jwt);
+}
+
+export function getKeeperStoryDetail(jwt, storyId) {
+  return keeperRequest(`/keeper/book/stories/${storyId}`, jwt);
+}

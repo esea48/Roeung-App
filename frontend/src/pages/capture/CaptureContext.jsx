@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useLangPref } from '../../hooks/useLangPref';
 import {
   createStory,
   createStoryTags,
@@ -11,7 +12,6 @@ import {
 const CaptureCtx = createContext(null);
 
 const initialState = {
-  lang: 'en',
   path: 'record', // 'record' | 'upload'
   audioLang: 'kh', // 'kh' | 'en' — language of the audio, set by recorder at capture
   narratorId: null,
@@ -28,8 +28,7 @@ const initialState = {
 
 export function CaptureProvider({ accessToken, children }) {
   const [state, setState] = useState(initialState);
-
-  const setLang = useCallback((lang) => setState((s) => ({ ...s, lang })), []);
+  const [lang, setLang] = useLangPref();
   const setPath = useCallback((path) => setState((s) => ({ ...s, path })), []);
   const setAudioLang = useCallback((audioLang) => setState((s) => ({ ...s, audioLang })), []);
   const setNarrator = useCallback(
@@ -112,7 +111,6 @@ export function CaptureProvider({ accessToken, children }) {
   const reset = useCallback(() => {
     setState((s) => ({
       ...initialState,
-      lang: s.lang,
       familyMembers: s.familyMembers,
       recentStories: s.recentStories,
       loadingFamily: false,
@@ -124,6 +122,7 @@ export function CaptureProvider({ accessToken, children }) {
   const value = useMemo(
     () => ({
       ...state,
+      lang,
       accessToken,
       setLang,
       setPath,
@@ -141,6 +140,7 @@ export function CaptureProvider({ accessToken, children }) {
     }),
     [
       state,
+      lang,
       accessToken,
       setLang,
       setPath,

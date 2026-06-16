@@ -132,6 +132,24 @@
   font: 500 12px var(--font-kh);
 }
 
+/* ── Hamburger button ────────────────────────────────────── */
+
+.book-hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.book-hamburger:hover {
+  background: var(--sand);
+}
+
 /* ── Page wrapper ────────────────────────────────────────── */
 
 .book-page {
@@ -519,13 +537,7 @@
 /* ── STORY PAGE ──────────────────────────────────────────── */
 
 .book-story-page {
-  padding-bottom: 130px; /* room for sticky player on mobile */
-}
-
-@media (min-width: 768px) {
-  .book-story-page {
-    padding-bottom: 48px;
-  }
+  padding-bottom: 48px;
 }
 
 .book-story-header {
@@ -696,30 +708,12 @@
 
 /* ── Audio player ────────────────────────────────────────── */
 
-.book-player {
-  background: var(--surface2);
-  border-top: 1px solid var(--hairline);
-}
-
-/* On mobile: fixed to bottom of viewport */
-@media (max-width: 767px) {
-  .book-player {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 30;
-    box-shadow: 0 -6px 20px -8px rgba(42, 38, 32, 0.18);
-  }
-}
-
 .book-player-track {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  max-width: 960px;
-  margin: 0 auto;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .book-player-play {
@@ -822,12 +816,7 @@
   color: var(--faint2);
 }
 
-/* Desktop: player inline (not fixed) */
 @media (min-width: 768px) {
-  .book-player-track {
-    padding: 13px 0;
-  }
-
   .book-story-nav {
     padding: 11px 0;
   }
