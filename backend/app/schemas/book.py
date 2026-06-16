@@ -32,6 +32,7 @@ class StorySummaryResponse(BaseModel):
     chapter_sort_order: Optional[int]
     translation_flagged: bool
     published_at: Optional[datetime]
+    duration_seconds: Optional[int] = None
 
 
 class BookResponse(BaseModel):
@@ -104,6 +105,8 @@ class StoryDetailResponse(BaseModel):
     translation_flagged: bool
     translation_confidence_score: Optional[float]
     published_at: Optional[datetime]
+    audio_url: Optional[str] = None
+    duration_seconds: Optional[int] = None
     transcript_segments: list[TranscriptSegmentResponse]
     translation_segments: list[TranslationSegmentResponse]
     tags: list[StoryTagResponse]

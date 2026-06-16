@@ -9,13 +9,22 @@ or deleted is never returned.
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 from sqlmodel.sql.expression import SelectOfScalar
 
 from app.api.deps import get_family
 from app.db import get_session
-from app.models import Chapter, Family, FamilyMember, Story, StoryTag, TranscriptSegment, TranslationSegment
-from app.models.enums import StoryStatus
+from app.models import (
+    AudioFile,
+    Chapter,
+    Family,
+    FamilyMember,
+    Story,
+    StoryTag,
+    TranscriptSegment,
+    TranslationSegment,
+)
+from app.models.enums import AudioFileType, StoryStatus
 from app.schemas.book import (
     BookResponse,
     ChapterResponse,
@@ -38,6 +47,32 @@ def _sorted_published_stories(query: SelectOfScalar[Story], sort: SortOrder) -> 
     return query.order_by(Story.published_at.desc())
 
 
+def _audio_by_story(session: Session, story_ids: list[uuid.UUID]) -> dict[uuid.UUID, AudioFile]:
+    """Fetch original audio files for a list of story IDs, keyed by story_id."""
+    if not story_ids:
+        return {}
+    rows = session.exec(
+        select(AudioFile)
+        .where(col(AudioFile.story_id).in_(story_ids))
+        .where(AudioFile.file_type == AudioFileType.original)
+    ).all()
+    return {af.story_id: af for af in rows}
+
+
+def _story_summary(story: Story, audio: AudioFile | None = None) -> StorySummaryResponse:
+    return StorySummaryResponse(
+        id=story.id,
+        title_en=story.title_en,
+        title_kh=story.title_kh,
+        narrator_name_raw=story.narrator_name_raw,
+        chapter_id=story.chapter_id,
+        chapter_sort_order=story.chapter_sort_order,
+        translation_flagged=story.translation_flagged,
+        published_at=story.published_at,
+        duration_seconds=audio.duration_seconds if audio else None,
+    )
+
+
 @router.get("/book", response_model=BookResponse)
 def get_book(
     family: Family = Depends(get_family),
@@ -56,9 +91,11 @@ def get_book(
         .limit(RECENT_STORIES_LIMIT)
     ).all()
 
+    audio_map = _audio_by_story(session, [s.id for s in recent_stories])
+
     return BookResponse(
         chapters=[ChapterResponse.model_validate(c) for c in chapters],
-        recent_stories=[StorySummaryResponse.model_validate(s) for s in recent_stories],
+        recent_stories=[_story_summary(s, audio_map.get(s.id)) for s in recent_stories],
     )
 
 
@@ -68,7 +105,7 @@ def get_chapter_stories(
     sort: SortOrder = Query("newest"),
     family: Family = Depends(get_family),
     session: Session = Depends(get_session),
-) -> list[Story]:
+) -> list[StorySummaryResponse]:
     """Chapter view (4.2): published stories in a chapter."""
     chapter = session.get(Chapter, chapter_id)
     if chapter is None or chapter.family_id != family.id:
@@ -81,7 +118,8 @@ def get_chapter_stories(
         .where(Story.status == StoryStatus.published)
     )
     stories = session.exec(_sorted_published_stories(query, sort)).all()
-    return stories
+    audio_map = _audio_by_story(session, [s.id for s in stories])
+    return [_story_summary(s, audio_map.get(s.id)) for s in stories]
 
 
 @router.get("/book/uncategorised", response_model=list[StorySummaryResponse])
@@ -89,7 +127,7 @@ def get_uncategorised_stories(
     sort: SortOrder = Query("newest"),
     family: Family = Depends(get_family),
     session: Session = Depends(get_session),
-) -> list[Story]:
+) -> list[StorySummaryResponse]:
     """Uncategorised shelf (4.2): published stories with no chapter assigned."""
     query = (
         select(Story)
@@ -98,7 +136,8 @@ def get_uncategorised_stories(
         .where(Story.status == StoryStatus.published)
     )
     stories = session.exec(_sorted_published_stories(query, sort)).all()
-    return stories
+    audio_map = _audio_by_story(session, [s.id for s in stories])
+    return [_story_summary(s, audio_map.get(s.id)) for s in stories]
 
 
 @router.get("/stories/{story_id}", response_model=StoryDetailResponse)
@@ -130,6 +169,13 @@ def get_story(
         .join(FamilyMember, FamilyMember.id == StoryTag.family_member_id, isouter=True)
     ).all()
 
+    audio_file = session.exec(
+        select(AudioFile)
+        .where(AudioFile.story_id == story.id)
+        .where(AudioFile.file_type == AudioFileType.original)
+        .limit(1)
+    ).first()
+
     tags = []
     for tag, member in tag_rows:
         tags.append(
@@ -155,6 +201,8 @@ def get_story(
         translation_flagged=story.translation_flagged,
         translation_confidence_score=story.translation_confidence_score,
         published_at=story.published_at,
+        audio_url=audio_file.storage_url if audio_file else None,
+        duration_seconds=audio_file.duration_seconds if audio_file else None,
         transcript_segments=[TranscriptSegmentResponse.from_model(s) for s in transcript_segments],
         translation_segments=[TranslationSegmentResponse.from_model(s) for s in translation_segments],
         tags=tags,

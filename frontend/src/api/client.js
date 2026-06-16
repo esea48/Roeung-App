@@ -84,3 +84,15 @@ export function deleteStory(accessToken, storyId) {
     method: 'DELETE',
   });
 }
+
+export function getChapterStories(accessToken, chapterId, sort = 'newest') {
+  return request(`/f/${accessToken}/chapters/${chapterId}/stories?sort=${sort}`);
+}
+
+export function getUncategorisedStories(accessToken, sort = 'newest') {
+  return request(`/f/${accessToken}/book/uncategorised?sort=${sort}`);
+}
+
+export function getStoryDetail(accessToken, storyId) {
+  return request(`/f/${accessToken}/stories/${storyId}`);
+}
