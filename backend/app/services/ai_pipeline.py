@@ -124,8 +124,8 @@ def _replace_story_rows(session: Session, model, story_id: uuid.UUID) -> None:
     session.exec(delete(model).where(model.story_id == story_id))
 
 
-_GOOGLE_LANG = {"kh": "km"}  # internal code → BCP 47 code expected by Google
-_WHISPER_LANG = {"kh": "km", "en": "en"}  # internal code → ISO 639-1 expected by Whisper
+_GOOGLE_LANG = {"kh": "km"}   # internal code → BCP 47 code expected by Google
+_ELEVENLABS_LANG = {"kh": "km", "en": "en"}  # internal code → ISO 639-1 expected by ElevenLabs
 
 
 def _translate_text(text: str, source: Language, target: Language) -> str:
@@ -215,6 +215,82 @@ async def _check_audio_quality(session: Session, story: Story) -> None:
     session.commit()
 
 
+def _segment_elevenlabs_words(
+    words: list[dict],
+    pause_threshold: float = 1.5,
+) -> list[tuple[int, int, str, list[dict]]]:
+    """Group a flat ElevenLabs word list into sentence-level segments.
+
+    Returns a list of (start_ms, end_ms, text, word_timestamps) tuples.
+    Splits on sentence-ending punctuation or silence gaps longer than
+    pause_threshold seconds.
+    """
+    _SENTENCE_END = frozenset(".!?")
+    segments: list[tuple[int, int, str, list[dict]]] = []
+    current_tokens: list[str] = []
+    current_wts: list[dict] = []
+    seg_start_ms: int | None = None
+    seg_end_ms: int | None = None
+    last_word_end: float | None = None
+
+    for i, w in enumerate(words):
+        wtype = w.get("type")
+        wtext = w.get("text", "")
+        wstart = w.get("start")
+        wend = w.get("end")
+
+        if wtype == "audio_event":
+            continue
+
+        if wtype == "word":
+            start_ms = int(wstart * 1000) if wstart is not None else None
+            end_ms = int(wend * 1000) if wend is not None else None
+
+            # Split on long pause before this word
+            if last_word_end is not None and wstart is not None:
+                if wstart - last_word_end > pause_threshold and current_tokens:
+                    text = "".join(current_tokens).strip()
+                    if text:
+                        segments.append((seg_start_ms or 0, seg_end_ms or 0, text, current_wts))
+                    current_tokens = []
+                    current_wts = []
+                    seg_start_ms = None
+                    seg_end_ms = None
+
+            if seg_start_ms is None and start_ms is not None:
+                seg_start_ms = start_ms
+            if end_ms is not None:
+                seg_end_ms = end_ms
+            if wend is not None:
+                last_word_end = wend
+
+            current_wts.append({
+                "word": wtext,
+                "start_ms": int(wstart * 1000) if wstart is not None else 0,
+                "end_ms": int(wend * 1000) if wend is not None else 0,
+            })
+
+        current_tokens.append(wtext)
+
+        # Split on sentence-ending punctuation
+        if wtype == "word" and wtext.rstrip()[-1:] in _SENTENCE_END:
+            text = "".join(current_tokens).strip()
+            if text:
+                segments.append((seg_start_ms or 0, seg_end_ms or 0, text, current_wts))
+            current_tokens = []
+            current_wts = []
+            seg_start_ms = None
+            seg_end_ms = None
+            last_word_end = None
+
+    if current_tokens:
+        text = "".join(current_tokens).strip()
+        if text:
+            segments.append((seg_start_ms or 0, seg_end_ms or 0, text, current_wts))
+
+    return segments
+
+
 async def _transcribe(session: Session, story: Story) -> None:
     story.processing_step = "transcription"
     session.add(story)
@@ -224,42 +300,37 @@ async def _transcribe(session: Session, story: Story) -> None:
     audio_bytes = download_audio_file(audio_file.storage_key)
     _replace_story_rows(session, TranscriptSegment, story.id)
 
-    _MIME_TO_EXT = {
-        "audio/webm": "webm", "audio/mp4": "mp4", "audio/mpeg": "mp3",
-        "audio/ogg": "ogg", "audio/wav": "wav", "audio/flac": "flac",
-        "audio/x-m4a": "m4a",
-    }
-    _WHISPER_EXTS = {"webm", "mp4", "mp3", "m4a", "mpeg", "mpga", "oga", "ogg", "wav", "flac"}
-    raw_ext = audio_file.storage_key.rsplit(".", 1)[-1].lower() if "." in audio_file.storage_key else ""
-    if raw_ext in _WHISPER_EXTS:
-        extension = raw_ext
-    else:
-        base_mime = (audio_file.mime_type or "").split(";")[0].strip()
-        extension = _MIME_TO_EXT.get(base_mime, "webm")
-
-    whisper_lang = _WHISPER_LANG.get(story.audio_language.value) if story.audio_language else None
-    transcription = _openai_client().audio.transcriptions.create(
-        model="whisper-1",
-        file=(f"audio.{extension}", audio_bytes, audio_file.mime_type or "application/octet-stream"),
-        response_format="verbose_json",
-        timestamp_granularities=["word", "segment"],
-        **({"language": whisper_lang} if whisper_lang else {}),
+    filename = audio_file.storage_key.rsplit("/", 1)[-1] or "audio"
+    mime = audio_file.mime_type or "application/octet-stream"
+    lang_code = (
+        _ELEVENLABS_LANG.get(story.audio_language.value) if story.audio_language else None
     )
 
-    words = [
-        {"word": w.word, "start_ms": int(w.start * 1000), "end_ms": int(w.end * 1000)}
-        for w in (transcription.words or [])
-    ]
+    form: dict = {
+        "model_id": (None, "scribe_v2"),
+        "file": (filename, audio_bytes, mime),
+        "timestamps_granularity": (None, "word"),
+    }
+    if lang_code:
+        form["language_code"] = (None, lang_code)
+
+    settings = get_settings()
+    response = httpx.post(
+        "https://api.elevenlabs.io/v1/speech-to-text",
+        headers={"xi-api-key": settings.elevenlabs_api_key},
+        files=form,
+        timeout=120,
+    )
+    response.raise_for_status()
+    data = response.json()
+
+    raw_words = data.get("words", [])
+    segments = _segment_elevenlabs_words(raw_words)
 
     detected_languages: set[Language] = set()
-    for index, segment in enumerate(transcription.segments or []):
-        start_ms = int(segment.start * 1000)
-        end_ms = int(segment.end * 1000)
-        text = segment.text.strip()
+    for index, (start_ms, end_ms, text, wts) in enumerate(segments):
         language = _detect_language(text)
         detected_languages.add(language)
-        segment_words = [w for w in words if start_ms <= w["start_ms"] < end_ms]
-
         session.add(
             TranscriptSegment(
                 story_id=story.id,
@@ -268,7 +339,7 @@ async def _transcribe(session: Session, story: Story) -> None:
                 start_ms=start_ms,
                 end_ms=end_ms,
                 original_text=text,
-                word_timestamps=segment_words or None,
+                word_timestamps=wts or None,
             )
         )
 

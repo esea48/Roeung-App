@@ -27,7 +27,10 @@ class Settings:
     # and stops (CLAUDE.md "AI Pipeline (ARQ Workers)" step 1).
     audio_quality_threshold: float = float(os.environ.get("AUDIO_QUALITY_THRESHOLD", "0.5"))
 
-    # OpenAI — Whisper transcription and GPT-4 review/generation steps.
+    # ElevenLabs — Scribe v2 transcription.
+    elevenlabs_api_key: str = os.environ.get("ELEVENLABS_API_KEY", "")
+
+    # OpenAI — GPT-4 cultural review, title generation, people flagging steps.
     openai_api_key: str = os.environ.get("OPENAI_API_KEY") or os.environ.get("openai_api_key", "")
 
     # Google Cloud Translation API (v2, key-based) — first-pass translation.
