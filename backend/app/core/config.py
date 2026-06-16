@@ -41,6 +41,10 @@ class Settings:
         os.environ.get("TRANSLATION_CONFIDENCE_THRESHOLD", "0.7")
     )
 
+    # Allowed browser origin for CORS. In production set to the deployed
+    # frontend URL; defaults to Vite's local dev port.
+    frontend_origin: str = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -2,11 +2,19 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import LanguageDetected, MentionResolutionStatus, StoryStatus
+from app.models.enums import (
+    AudioFileType,
+    CaptureMethod,
+    Language,
+    LanguageDetected,
+    MentionResolutionStatus,
+    StoryStatus,
+    TaggedBy,
+)
 
 
 class LockInfo(BaseModel):
@@ -107,3 +115,115 @@ class MentionResponse(BaseModel):
     resolution_status: MentionResolutionStatus
     resolved_by: Optional[uuid.UUID]
     resolved_at: Optional[datetime]
+
+
+class StatsResponse(BaseModel):
+    awaiting_review: int
+    flagged: int
+
+
+class TranscriptSegmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    story_id: uuid.UUID
+    language: Language
+    segment_index: int
+    start_ms: int
+    end_ms: int
+    original_text: str
+    edited_text: Optional[str]
+    edited_by: Optional[uuid.UUID]
+    edited_at: Optional[datetime]
+    word_timestamps: Optional[Any]
+
+
+class TranslationSegmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    story_id: uuid.UUID
+    transcript_segment_id: uuid.UUID
+    source_language: Language
+    target_language: Language
+    segment_index: int
+    original_text: str
+    edited_text: Optional[str]
+    edited_by: Optional[uuid.UUID]
+    edited_at: Optional[datetime]
+    confidence_score: Optional[float]
+    cultural_flag: bool
+    cultural_flag_note: Optional[str]
+
+
+class TitleSuggestionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    story_id: uuid.UUID
+    language: Language
+    suggestion_index: int
+    text: str
+    selected: bool
+
+
+class StoryTagResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    story_id: uuid.UUID
+    family_member_id: Optional[uuid.UUID]
+    name_raw: str
+    tagged_by: TaggedBy
+
+
+class AudioFileResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    storage_url: Optional[str]
+    mime_type: Optional[str]
+    duration_seconds: Optional[int]
+    file_size_bytes: Optional[int]
+
+
+class ChapterResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    title_en: str
+    title_kh: Optional[str]
+    sort_order: int
+
+
+class KeeperStoryDetailResponse(BaseModel):
+    """Full story payload for the keeper review screen (StoryReview.jsx)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    status: StoryStatus
+    capture_method: CaptureMethod
+    narrator_name_raw: str
+    language_detected: Optional[LanguageDetected]
+    audio_quality_score: Optional[float]
+    title_en: Optional[str]
+    title_kh: Optional[str]
+    translation_flagged: bool
+    translation_confidence_score: Optional[float]
+    chapter_id: Optional[uuid.UUID]
+    chapter_sort_order: Optional[int]
+    submitted_at: Optional[datetime]
+    published_at: Optional[datetime]
+    published_by: Optional[uuid.UUID]
+    archived_at: Optional[datetime]
+    archived_by: Optional[uuid.UUID]
+    updated_at: datetime
+
+    audio_file: Optional[AudioFileResponse] = None
+    transcript_segments: list[TranscriptSegmentResponse] = []
+    translation_segments: list[TranslationSegmentResponse] = []
+    title_suggestions: list[TitleSuggestionResponse] = []
+    ai_people_mentions: list[MentionResponse] = []
+    story_tags: list[StoryTagResponse] = []
+    lock: Optional[LockInfo] = None

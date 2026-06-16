@@ -10,24 +10,31 @@ import uuid
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.api.deps import get_current_keeper, verify_keeper_family
 from app.db import get_session
 from app.models import (
     AIPeopleMention,
+    AudioFile,
     Chapter,
     FamilyMember,
     Keeper,
     KeeperLock,
     Story,
     StoryTag,
+    TitleSuggestion,
     TranscriptSegment,
     TranslationSegment,
 )
 from app.models.common import utcnow
 from app.models.enums import MentionResolutionStatus, StoryStatus, TaggedBy
+from app.schemas.family_members import FamilyMemberResponse
 from app.schemas.keepers import (
+    AudioFileResponse,
+    ChapterResponse,
+    KeeperStoryDetailResponse,
     KeeperStoryResponse,
     LockInfo,
     LockResponse,
@@ -37,7 +44,12 @@ from app.schemas.keepers import (
     QueueStoryResponse,
     SegmentResponse,
     SegmentUpdateRequest,
+    StatsResponse,
+    StoryTagResponse,
     StoryUpdateRequest,
+    TitleSuggestionResponse,
+    TranscriptSegmentResponse,
+    TranslationSegmentResponse,
 )
 
 router = APIRouter(prefix="/keeper", tags=["keeper"])
@@ -196,15 +208,14 @@ def update_story(
     return story
 
 
-@router.patch("/stories/{story_id}/segments/{segment_id}", response_model=SegmentResponse)
-def update_segment(
+def _update_segment_impl(
     story_id: uuid.UUID,
     segment_id: uuid.UUID,
     payload: SegmentUpdateRequest,
-    keeper: Keeper = Depends(get_current_keeper),
-    session: Session = Depends(get_session),
+    keeper: Keeper,
+    session: Session,
 ):
-    """Transcript/translation correction (3.2).
+    """Shared handler for transcript and translation segment corrections (3.2).
 
     Per CLAUDE.md invariant #1, `original_text` is write-once — corrections
     go to `edited_text` only.
@@ -225,6 +236,28 @@ def update_segment(
     session.commit()
     session.refresh(segment)
     return segment
+
+
+@router.patch("/stories/{story_id}/transcript-segments/{segment_id}", response_model=SegmentResponse)
+def update_transcript_segment(
+    story_id: uuid.UUID,
+    segment_id: uuid.UUID,
+    payload: SegmentUpdateRequest,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+):
+    return _update_segment_impl(story_id, segment_id, payload, keeper, session)
+
+
+@router.patch("/stories/{story_id}/translation-segments/{segment_id}", response_model=SegmentResponse)
+def update_translation_segment(
+    story_id: uuid.UUID,
+    segment_id: uuid.UUID,
+    payload: SegmentUpdateRequest,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+):
+    return _update_segment_impl(story_id, segment_id, payload, keeper, session)
 
 
 @router.post("/stories/{story_id}/publish", response_model=KeeperStoryResponse)
@@ -314,7 +347,7 @@ def unpublish_story(
     return story
 
 
-@router.post("/stories/{story_id}/people/{mention_id}/link", response_model=MentionResponse)
+@router.post("/stories/{story_id}/people-mentions/{mention_id}/link", response_model=MentionResponse)
 def link_people_mention(
     story_id: uuid.UUID,
     mention_id: uuid.UUID,
@@ -362,3 +395,141 @@ def link_people_mention(
     session.commit()
     session.refresh(mention)
     return mention
+
+
+@router.post("/stories/{story_id}/people-mentions/{mention_id}/dismiss", response_model=MentionResponse)
+def dismiss_people_mention(
+    story_id: uuid.UUID,
+    mention_id: uuid.UUID,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> AIPeopleMention:
+    """Dismiss an AI-detected name mention (3.2): mark it as not a family member."""
+    story = _get_keeper_story(session, keeper, story_id)
+
+    mention = session.get(AIPeopleMention, mention_id)
+    if mention is None or mention.story_id != story.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mention not found")
+
+    now = utcnow()
+    mention.resolution_status = MentionResolutionStatus.dismissed
+    mention.resolved_by = keeper.id
+    mention.resolved_at = now
+    session.add(mention)
+    session.commit()
+    session.refresh(mention)
+    return mention
+
+
+@router.get("/stats", response_model=StatsResponse)
+def get_stats(
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> StatsResponse:
+    """Badge counts for the keeper dashboard (KeeperContext.jsx)."""
+    awaiting = session.exec(
+        select(func.count(Story.id))
+        .where(Story.family_id == keeper.family_id)
+        .where(Story.status == StoryStatus.awaiting_review)
+    ).one()
+
+    flagged = session.exec(
+        select(func.count(Story.id))
+        .where(Story.family_id == keeper.family_id)
+        .where(Story.status == StoryStatus.awaiting_review)
+        .where(Story.translation_flagged == True)  # noqa: E712
+    ).one()
+
+    return StatsResponse(awaiting_review=awaiting, flagged=flagged)
+
+
+@router.get("/stories/{story_id}", response_model=KeeperStoryDetailResponse)
+def get_story_detail(
+    story_id: uuid.UUID,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> KeeperStoryDetailResponse:
+    """Full story detail for the review screen (StoryReview.jsx)."""
+    story = _get_keeper_story(session, keeper, story_id)
+
+    audio_file = session.exec(
+        select(AudioFile).where(AudioFile.story_id == story.id)
+    ).first()
+
+    transcript_segments = session.exec(
+        select(TranscriptSegment)
+        .where(TranscriptSegment.story_id == story.id)
+        .order_by(TranscriptSegment.segment_index)
+    ).all()
+
+    translation_segments = session.exec(
+        select(TranslationSegment)
+        .where(TranslationSegment.story_id == story.id)
+        .order_by(TranslationSegment.segment_index)
+    ).all()
+
+    title_suggestions = session.exec(
+        select(TitleSuggestion).where(TitleSuggestion.story_id == story.id)
+    ).all()
+
+    ai_people_mentions = session.exec(
+        select(AIPeopleMention).where(AIPeopleMention.story_id == story.id)
+    ).all()
+
+    story_tags = session.exec(
+        select(StoryTag).where(StoryTag.story_id == story.id)
+    ).all()
+
+    now = utcnow()
+    lock_row = session.exec(
+        select(KeeperLock, Keeper)
+        .join(Keeper, Keeper.id == KeeperLock.keeper_id)
+        .where(KeeperLock.story_id == story.id)
+        .where(KeeperLock.released_at.is_(None))
+        .where(KeeperLock.expires_at > now)
+    ).first()
+    lock_info = None
+    if lock_row:
+        lock, lock_keeper = lock_row
+        lock_info = LockInfo(
+            keeper_id=lock_keeper.id,
+            keeper_name=lock_keeper.name,
+            locked_at=lock.locked_at,
+            expires_at=lock.expires_at,
+        )
+
+    result = KeeperStoryDetailResponse.model_validate(story)
+    result.audio_file = AudioFileResponse.model_validate(audio_file) if audio_file else None
+    result.transcript_segments = [TranscriptSegmentResponse.model_validate(s) for s in transcript_segments]
+    result.translation_segments = [TranslationSegmentResponse.model_validate(s) for s in translation_segments]
+    result.title_suggestions = [TitleSuggestionResponse.model_validate(t) for t in title_suggestions]
+    result.ai_people_mentions = [MentionResponse.model_validate(m) for m in ai_people_mentions]
+    result.story_tags = [StoryTagResponse.model_validate(t) for t in story_tags]
+    result.lock = lock_info
+    return result
+
+
+@router.get("/family-members", response_model=list[FamilyMemberResponse])
+def get_family_members(
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> list[FamilyMember]:
+    """Family roster for the people-mention linking dropdown (StoryReview.jsx)."""
+    return session.exec(
+        select(FamilyMember)
+        .where(FamilyMember.family_id == keeper.family_id)
+        .order_by(FamilyMember.name_en)
+    ).all()
+
+
+@router.get("/chapters", response_model=list[ChapterResponse])
+def get_chapters(
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> list[Chapter]:
+    """Chapter list for the publish chapter-assignment dropdown (StoryReview.jsx)."""
+    return session.exec(
+        select(Chapter)
+        .where(Chapter.family_id == keeper.family_id)
+        .order_by(Chapter.sort_order)
+    ).all()
