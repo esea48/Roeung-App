@@ -12,6 +12,7 @@ access to Keeper routes, and vice versa.
 """
 
 import uuid
+from functools import lru_cache
 from typing import Optional
 
 import jwt
@@ -24,6 +25,12 @@ from app.db import get_session
 from app.models import Family, Keeper
 
 _bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@lru_cache(maxsize=1)
+def _get_jwks_client() -> jwt.PyJWKClient:
+    settings = get_settings()
+    return jwt.PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
 
 
 def get_family(access_token: str, session: Session = Depends(get_session)) -> Family:
@@ -48,6 +55,10 @@ def get_current_keeper(
     Raises 401 if the header is missing or the token is invalid/expired.
     Raises 403 if the token is valid but no active keeper matches its
     subject claim.
+
+    Supabase projects may use HS256 or ES256 depending on project settings.
+    We use PyJWKClient to fetch the correct public key from the JWKS endpoint,
+    which handles both algorithms and key rotation automatically.
     """
     if credentials is None:
         raise HTTPException(
@@ -56,12 +67,13 @@ def get_current_keeper(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    settings = get_settings()
     try:
+        jwks_client = _get_jwks_client()
+        signing_key = jwks_client.get_signing_key_from_jwt(credentials.credentials)
         payload = jwt.decode(
             credentials.credentials,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["HS256", "ES256", "RS256"],
             audience="authenticated",
         )
     except jwt.PyJWTError:

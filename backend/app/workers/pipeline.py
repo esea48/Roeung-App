@@ -30,7 +30,4 @@ async def enqueue_story_pipeline(story_id: uuid.UUID) -> None:
 
 class WorkerSettings:
     functions = [process_story]
-
-    @staticmethod
-    def redis_settings() -> RedisSettings:
-        return RedisSettings.from_dsn(get_settings().redis_url)
+    redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

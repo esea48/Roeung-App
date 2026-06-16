@@ -114,12 +114,17 @@ def _get_audio_file(session: Session, story: Story) -> AudioFile:
     return audio_file
 
 
+_GOOGLE_LANG = {"kh": "km"}  # internal code → BCP 47 code expected by Google
+
+
 def _translate_text(text: str, source: Language, target: Language) -> str:
     settings = get_settings()
+    src = _GOOGLE_LANG.get(source.value, source.value)
+    tgt = _GOOGLE_LANG.get(target.value, target.value)
     response = httpx.post(
         "https://translation.googleapis.com/language/translate/v2",
         params={"key": settings.google_translate_api_key},
-        json={"q": text, "source": source.value, "target": target.value, "format": "text"},
+        json={"q": text, "source": src, "target": tgt, "format": "text"},
         timeout=30,
     )
     response.raise_for_status()
@@ -128,7 +133,7 @@ def _translate_text(text: str, source: Language, target: Language) -> str:
 
 def _chat_json(*, system: str, user: str, schema_hint: str) -> dict:
     response = _openai_client().chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
@@ -146,6 +151,32 @@ def _chat_json(*, system: str, user: str, schema_hint: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def _to_wav_bytes(audio_bytes: bytes) -> bytes:
+    """Convert any browser audio format (webm/mp4/ogg) to WAV via ffmpeg.
+
+    Uses a temp file for input because webm requires seekable access that
+    pipe:0 cannot provide.
+    """
+    import subprocess
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-i", tmp_path, "-f", "wav", "-ac", "1", "-y", "pipe:1"],
+            capture_output=True,
+        )
+    finally:
+        os.unlink(tmp_path)
+
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg conversion failed: {result.stderr.decode()}")
+    return result.stdout
+
+
 async def _check_audio_quality(session: Session, story: Story) -> None:
     story.processing_step = "audio_quality_check"
     session.add(story)
@@ -154,7 +185,8 @@ async def _check_audio_quality(session: Session, story: Story) -> None:
     audio_file = _get_audio_file(session, story)
     audio_bytes = download_audio_file(audio_file.storage_key)
 
-    y, sr = librosa.load(io.BytesIO(audio_bytes), sr=None, mono=True)
+    wav_bytes = _to_wav_bytes(audio_bytes)
+    y, sr = librosa.load(io.BytesIO(wav_bytes), sr=None, mono=True)
     rms = librosa.feature.rms(y=y)[0]
     signal_power = float(np.mean(rms ** 2))
     noise_power = float(np.percentile(rms, 10) ** 2)
@@ -179,7 +211,19 @@ async def _transcribe(session: Session, story: Story) -> None:
 
     audio_file = _get_audio_file(session, story)
     audio_bytes = download_audio_file(audio_file.storage_key)
-    extension = audio_file.storage_key.rsplit(".", 1)[-1] if "." in audio_file.storage_key else "mp3"
+
+    _MIME_TO_EXT = {
+        "audio/webm": "webm", "audio/mp4": "mp4", "audio/mpeg": "mp3",
+        "audio/ogg": "ogg", "audio/wav": "wav", "audio/flac": "flac",
+        "audio/x-m4a": "m4a",
+    }
+    _WHISPER_EXTS = {"webm", "mp4", "mp3", "m4a", "mpeg", "mpga", "oga", "ogg", "wav", "flac"}
+    raw_ext = audio_file.storage_key.rsplit(".", 1)[-1].lower() if "." in audio_file.storage_key else ""
+    if raw_ext in _WHISPER_EXTS:
+        extension = raw_ext
+    else:
+        base_mime = (audio_file.mime_type or "").split(";")[0].strip()
+        extension = _MIME_TO_EXT.get(base_mime, "webm")
 
     transcription = _openai_client().audio.transcriptions.create(
         model="whisper-1",
