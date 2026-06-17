@@ -11,6 +11,7 @@ from .consent import ConsentLog, ConsentWordingVersion
 from .deletion_requests import DeletionRequest
 from .families import Family
 from .family_members import FamilyMember
+from .family_relationships import FamilyRelationship
 from .keeper_locks import KeeperLock
 from .keepers import Keeper
 from .segments import TranscriptSegment, TranslationSegment
@@ -27,6 +28,7 @@ __all__ = [
     "DeletionRequest",
     "Family",
     "FamilyMember",
+    "FamilyRelationship",
     "Keeper",
     "KeeperLock",
     "Story",

@@ -95,10 +95,10 @@ export function createKeeperNavConfig(stats = {}) {
       section: 'content',
     },
     {
-      id: 'members',
+      id: 'tree',
       route: '/keeper/members',
-      labelEn: 'Family members',
-      labelKh: 'សមាជិកគ្រួសារ',
+      labelEn: 'Family tree',
+      labelKh: 'ដើមគ្រួសារ',
       section: 'content',
     },
     {

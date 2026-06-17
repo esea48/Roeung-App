@@ -153,3 +153,34 @@ export const createChapter = (token, titleEn) =>
 
 export const deleteChapter = (token, chapterId) =>
   request(`/keeper/chapters/${chapterId}`, { method: 'DELETE' }, token);
+
+// Family tree
+export const getTree = (token) =>
+  request('/keeper/tree', {}, token);
+
+export const createTreeMember = (token, payload) =>
+  request('/keeper/tree/members', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+
+export const updateTreeMember = (token, memberId, payload) =>
+  request(`/keeper/tree/members/${memberId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  }, token);
+
+export const createRelationship = (token, payload) =>
+  request('/keeper/tree/relationships', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+
+export const deleteTreeMember = (token, memberId) =>
+  request(`/keeper/tree/members/${memberId}`, { method: 'DELETE' }, token);
+
+export const deleteRelationship = (token, relId) =>
+  request(`/keeper/tree/relationships/${relId}`, { method: 'DELETE' }, token);
+
+export const getMemberStories = (token, memberId) =>
+  request(`/keeper/tree/members/${memberId}/stories`, {}, token);

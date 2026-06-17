@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import book, family_members, keeper_book, keepers, stories
+from app.api import book, family_members, keeper_book, keeper_tree, keepers, stories
 from app.core.config import get_settings
 
 app = FastAPI(title="Roeung API")
@@ -18,6 +18,7 @@ app.add_middleware(
 app.include_router(stories.router)
 app.include_router(family_members.router)
 app.include_router(keepers.router)
+app.include_router(keeper_tree.router)
 app.include_router(keeper_book.router)
 app.include_router(book.router)
 

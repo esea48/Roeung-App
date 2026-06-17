@@ -61,3 +61,17 @@ class MentionResolutionStatus(str, Enum):
 class DeletionResolution(str, Enum):
     deleted = "deleted"
     rejected = "rejected"
+
+
+class RelationshipType(str, Enum):
+    parent = "parent"
+    child = "child"
+    spouse = "spouse"
+    sibling = "sibling"
+
+
+class Gender(str, Enum):
+    male = "male"
+    female = "female"
+    other = "other"
+    unknown = "unknown"

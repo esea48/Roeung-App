@@ -6,6 +6,7 @@ import KeeperQueue from './KeeperQueue';
 import KeeperPublished from './KeeperPublished';
 import KeeperArchive from './KeeperArchive';
 import KeeperChapters from './KeeperChapters';
+import KeeperFamilyTree from './KeeperFamilyTree';
 import StoryReview from './StoryReview';
 import BookApp from '../book/BookApp';
 import { createKeeperNavConfig, isActive } from '../../components/navConfig.js';
@@ -13,7 +14,7 @@ import './keeper.css';
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
-const SIDEBAR_ICONS = { queue: '📥', flagged: '⚠', published: '✓', archive: '🗄', book: '📖', members: '👤', chapters: '🗂' };
+const SIDEBAR_ICONS = { queue: '📥', flagged: '⚠', published: '✓', archive: '🗄', book: '📖', tree: '🌳', members: '👤', chapters: '🗂' };
 
 function Sidebar({ onNav }) {
   const navigate = useNavigate();
@@ -176,7 +177,7 @@ function KeeperShell() {
           <Route path="published" element={<KeeperPublished />} />
           <Route path="archive" element={<KeeperArchive />} />
           <Route path="book/*" element={<KeeperBookWrapper />} />
-          <Route path="members" element={<PlaceholderPage title="Family Members" />} />
+          <Route path="members" element={<KeeperFamilyTree />} />
           <Route path="chapters" element={<KeeperChapters />} />
           <Route path="*" element={<Navigate to="/keeper" replace />} />
         </Routes>

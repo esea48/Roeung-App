@@ -7,7 +7,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, SQLModel
 
 from .common import timestamptz_field, utcnow, uuid_fk_field, uuid_pk_field
-from .enums import DeceasedDatePrecision
+from .enums import DeceasedDatePrecision, Gender
 
 
 class FamilyMember(SQLModel, table=True):
@@ -29,8 +29,15 @@ class FamilyMember(SQLModel, table=True):
         sa_column=Column(SAEnum(DeceasedDatePrecision, name="deceased_date_precision")),
     )
 
+    gender: Optional[Gender] = Field(
+        default=None,
+        sa_column=Column(SAEnum(Gender, name="gender"), nullable=True),
+    )
     birth_year: Optional[int] = None
     notes: Optional[str] = None
+    is_tree_member: bool = Field(default=False)
+    position_col: Optional[int] = Field(default=None)
+    position_row: Optional[int] = Field(default=None)
 
     created_at: datetime = timestamptz_field(
         nullable=False, default_factory=utcnow, server_default_now=True
