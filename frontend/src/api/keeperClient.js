@@ -135,6 +135,9 @@ export const dismissMention = (token, storyId, mentionId) =>
     method: 'POST',
   }, token);
 
+export const getFamilyToken = (token) =>
+  request('/keeper/family-token', {}, token);
+
 // Reference data
 export const getFamilyMembers = (token) =>
   request('/keeper/family-members', {}, token);

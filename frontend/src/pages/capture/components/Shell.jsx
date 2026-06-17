@@ -9,7 +9,8 @@ export default function Shell({ children }) {
   const { lang, setLang, accessToken } = useCapture();
   const [menuOpen, setMenuOpen] = useState(false);
   const hamburgerRef = useRef(null);
-  const navItems = createFamilyNavConfig(accessToken);
+  const isKeeper = !!localStorage.getItem('roeung_keeper_token');
+  const navItems = createFamilyNavConfig(accessToken, isKeeper);
 
   return (
     <div className="capture" data-lang={lang}>

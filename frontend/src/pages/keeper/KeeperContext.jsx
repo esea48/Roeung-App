@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   loginWithSupabase,
   getQueue,
@@ -7,6 +7,7 @@ import {
   getArchivedStories,
   getFamilyMembers,
   getChapters,
+  getFamilyToken,
 } from '../../api/keeperClient';
 
 const TOKEN_KEY = 'roeung_keeper_token';
@@ -38,8 +39,25 @@ export function KeeperProvider({ children }) {
 
   const [stats, setStats] = useState({ awaiting_review: 0, flagged: 0 });
 
+  const [familyAccessToken, setFamilyAccessToken] = useState(null);
+
   const [familyMembers, setFamilyMembers] = useState([]);
   const [chapters, setChapters] = useState([]);
+
+  const loadFamilyToken = useCallback(async (jwt) => {
+    if (!jwt) return;
+    try {
+      const data = await getFamilyToken(jwt);
+      setFamilyAccessToken(data.access_token);
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  useEffect(() => {
+    if (token) loadFamilyToken(token);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = useCallback(async (email, password) => {
     const data = await loginWithSupabase(email, password);
@@ -48,8 +66,9 @@ export function KeeperProvider({ children }) {
     localStorage.setItem(USER_KEY, JSON.stringify(supaUser));
     setToken(access_token);
     setUser(supaUser);
+    loadFamilyToken(access_token);
     return data;
-  }, []);
+  }, [loadFamilyToken]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
@@ -157,6 +176,7 @@ export function KeeperProvider({ children }) {
       user,
       login,
       logout,
+      familyAccessToken,
       queue,
       queueLoading,
       queueError,
@@ -177,7 +197,7 @@ export function KeeperProvider({ children }) {
       loadChapters,
     }),
     [
-      token, user, login, logout,
+      token, user, login, logout, familyAccessToken,
       queue, queueLoading, queueError, loadQueue,
       publishedStories, publishedLoading, publishedError, loadPublished,
       archivedStories, archivedLoading, archivedError, loadArchived,

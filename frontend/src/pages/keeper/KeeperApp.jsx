@@ -18,7 +18,7 @@ const SIDEBAR_ICONS = { queue: '📥', flagged: '⚠', published: '✓', archive
 function Sidebar({ onNav }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, stats, loadStats } = useKeeper();
+  const { user, logout, stats, loadStats, familyAccessToken } = useKeeper();
 
   useEffect(() => {
     loadStats();
@@ -77,6 +77,23 @@ function Sidebar({ onNav }) {
       <nav className="sidebar-nav">
         {contentItems.map(renderItem)}
       </nav>
+
+      {/* Record a story */}
+      {familyAccessToken && (
+        <>
+          <div className="sidebar-divider" />
+          <nav className="sidebar-nav">
+            <button
+              type="button"
+              className="sidebar-item"
+              onClick={() => nav(`/f/${familyAccessToken}/capture`)}
+            >
+              <span className="sidebar-item-icon">🎙</span>
+              <span className="sidebar-item-label">Record a story</span>
+            </button>
+          </nav>
+        </>
+      )}
 
       {/* Keeper identity + logout */}
       <div className="sidebar-keeper">

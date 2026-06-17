@@ -9,8 +9,19 @@
  * Nav items for the Capture and Book surfaces.
  * Routes are fully-qualified paths using the family access token.
  */
-export function createFamilyNavConfig(accessToken) {
-  return [
+export function createFamilyNavConfig(accessToken, isKeeper = false) {
+  const items = [];
+
+  if (isKeeper) {
+    items.push({
+      id: 'keeper-dashboard',
+      route: '/keeper',
+      labelEn: 'Keeper Dashboard',
+      labelKh: 'ផ្ទាំងគ្រប់គ្រង',
+    });
+  }
+
+  items.push(
     {
       id: 'book',
       route: `/f/${accessToken}/book`,
@@ -31,7 +42,9 @@ export function createFamilyNavConfig(accessToken) {
       labelEn: 'Chapters',
       labelKh: 'ជំពូក',
     },
-  ];
+  );
+
+  return items;
 }
 
 /**

@@ -21,6 +21,7 @@ from app.models import (
     AudioFile,
     Chapter,
     ConsentLog,
+    Family,
     FamilyMember,
     Keeper,
     KeeperLock,
@@ -69,6 +70,18 @@ def _get_keeper_story(session: Session, keeper: Keeper, story_id: uuid.UUID) -> 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Story not found")
     verify_keeper_family(keeper, story.family_id)
     return story
+
+
+@router.get("/family-token")
+def get_family_token(
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+):
+    """Return the family access token so a Keeper can navigate to the capture flow."""
+    family = session.get(Family, keeper.family_id)
+    if family is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Family not found")
+    return {"access_token": family.access_token}
 
 
 @router.get("/queue", response_model=list[QueueStoryResponse])

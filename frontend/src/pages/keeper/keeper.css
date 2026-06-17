@@ -458,12 +458,28 @@
 
 /* ── Login page ──────────────────────────────────────────────────── */
 
+/* Tokens defined here because login renders outside the .keeper wrapper */
 .keeper-login {
+  --login-bg: #2a2620;
+  --login-card-bg: #faf8f3;
+  --login-ink: #2a2620;
+  --login-body: #6f685b;
+  --login-faint: #8c8576;
+  --login-gold: #e6b98f;
+  --login-border: #c4b49a;
+  --login-border-focus: #a3623e;
+  --login-input-bg: #ffffff;
+  --login-danger: #bf4528;
+  --login-danger-bg: #fef2ee;
+  --login-danger-border: #e3b6ac;
+  --font-serif: 'Newsreader', serif;
+  --font-sans: 'Hanken Grotesk', sans-serif;
+
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface2);
+  background: var(--login-bg);
   padding: 20px;
   font-family: var(--font-sans);
   font-size: 14px;
@@ -472,10 +488,11 @@
 .login-card {
   width: 100%;
   max-width: 360px;
-  background: var(--surface3);
-  border: 1px solid var(--hairline);
+  background: var(--login-card-bg);
+  border: 1px solid rgba(42, 38, 32, 0.12);
   border-radius: 14px;
   padding: 32px 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
 }
 
 .login-logo {
@@ -485,20 +502,20 @@
 
 .login-logo-mark {
   font: 500 28px/1 var(--font-serif);
-  color: var(--clay);
+  color: var(--login-gold);
   display: block;
 }
 
 .login-logo-name {
   font: 500 16px/1.4 var(--font-serif);
-  color: var(--ink);
+  color: var(--login-ink);
   margin-top: 4px;
   display: block;
 }
 
 .login-logo-sub {
   font-size: 11px;
-  color: var(--faint);
+  color: var(--login-faint);
   margin-top: 2px;
   display: block;
 }
@@ -511,7 +528,7 @@
   display: block;
   font-size: 11px;
   font-weight: 500;
-  color: var(--body);
+  color: var(--login-body);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 5px;
@@ -520,35 +537,36 @@
 .login-input {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid var(--hairline-strong);
+  border: 1.5px solid var(--login-border);
   border-radius: 7px;
   font-size: 13px;
   font-family: var(--font-sans);
-  color: var(--ink);
-  background: var(--surface);
-  transition: border-color 0.15s;
+  color: var(--login-ink);
+  background: var(--login-input-bg);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .login-input:focus {
   outline: none;
-  border-color: var(--clay);
+  border-color: var(--login-border-focus);
+  box-shadow: 0 0 0 3px rgba(163, 98, 62, 0.12);
 }
 
 .login-error {
   font-size: 12px;
-  color: var(--danger);
+  color: var(--login-danger);
   margin-bottom: 14px;
   padding: 8px 10px;
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
+  background: var(--login-danger-bg);
+  border: 1px solid var(--login-danger-border);
   border-radius: 6px;
 }
 
 .btn-primary {
   width: 100%;
   padding: 10px;
-  background: var(--ink);
-  color: var(--surface3);
+  background: var(--login-ink);
+  color: var(--login-card-bg);
   border: none;
   border-radius: 8px;
   font-size: 13px;

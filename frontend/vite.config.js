@@ -26,7 +26,7 @@ export default defineConfig({
       // Keeper API routes — matched precisely to avoid conflicting with the
       // Keeper SPA routes at /keeper and /keeper/story/:id.
       // 'stories' (plural) is the API path; 'story' (singular) is the SPA.
-      '^/keeper/(queue|stories|family-members|chapters|stats|published|archived)((/|\\?).*)?$': {
+      '^/keeper/(queue|stories|family-members|family-token|chapters|stats|published|archived)((/|\\?).*)?$': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:8000',
         changeOrigin: true,
       },
