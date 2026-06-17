@@ -16,7 +16,7 @@ export function createFamilyNavConfig(accessToken, isKeeper = false) {
     items.push({
       id: 'keeper-dashboard',
       route: '/keeper',
-      labelEn: 'Keeper Dashboard',
+      labelEn: 'Keeper Review',
       labelKh: 'ផ្ទាំងគ្រប់គ្រង',
     });
   }
