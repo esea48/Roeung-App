@@ -26,7 +26,7 @@ Read these before making structural decisions:
 | Keeper auth | Supabase Auth (email/password) |
 | AI job queue | ARQ (async, built on Redis) |
 | Hosting | Railway (backend + Redis; frontend via Vite build or Railway static) |
-| Transcription | OpenAI Whisper API |
+| Transcription | ElevenLabs Scribe v2 API |
 | Translation | Google Cloud Translation API (first pass) + OpenAI GPT-4 (cultural flag review pass) |
 
 ---
@@ -47,7 +47,7 @@ Read these before making structural decisions:
 │   │   ├── models/              # SQLModel table definitions
 │   │   ├── schemas/             # Pydantic request/response schemas
 │   │   ├── services/            # Business logic (no DB calls in routes)
-│   │   │   ├── ai_pipeline.py   # Orchestrates Whisper + translation
+│   │   │   ├── ai_pipeline.py   # Orchestrates ElevenLabs transcription + translation
 │   │   │   ├── storage.py       # Supabase Storage interactions
 │   │   │   └── locks.py         # Soft lock + heartbeat logic
 │   │   └── workers/             # ARQ job definitions
@@ -99,7 +99,7 @@ submitted → processing → awaiting_review → in_review → published
 Triggered when a story reaches `status = 'submitted'`. Steps run in order; each step updates `stories.status` to `'processing'` with a `processing_step` field (for progress display):
 
 1. **Audio quality check** — score audio; if below threshold (configurable env var `AUDIO_QUALITY_THRESHOLD`), set `status = 'rejected'` and stop.
-2. **Transcription** — Whisper API; create `transcript_segments` rows with word-level timestamps as JSONB.
+2. **Transcription** — ElevenLabs Scribe v2 API; create `transcript_segments` rows with word-level timestamps as JSONB.
 3. **Translation** — Google Translate API (first pass); create `translation_segments` rows.
 4. **Cultural flag review** — GPT-4/Claude API; update `translation_segments` with `cultural_flag`, `cultural_flag_note`, and `confidence_score` per segment.
 5. **Title generation** — GPT-4/Claude; create 3 `title_suggestions` rows in both KH and EN.

@@ -44,7 +44,7 @@ class Story(SQLModel, table=True):
 
     submitted_at: Optional[datetime] = timestamptz_field(nullable=True)
 
-    # Set by the recorder at capture time; passed to Whisper to improve accuracy.
+    # Set by the recorder at capture time; passed to ElevenLabs to improve accuracy.
     audio_language: Optional[Language] = Field(
         default=None,
         sa_column=Column(SAEnum(Language, name="language")),

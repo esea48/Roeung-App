@@ -210,7 +210,7 @@ def _openai_client() -> OpenAI:
 def _detect_language(text: str) -> Language:
     """Per-segment language detection via Khmer script presence.
 
-    More reliable than trusting a single whole-file language from Whisper,
+    More reliable than trusting a single whole-file language from ElevenLabs,
     since stories may switch between Khmer and English mid-recording.
     """
     return Language.kh if _KHMER_RE.search(text) else Language.en

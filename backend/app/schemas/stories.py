@@ -20,7 +20,7 @@ class StoryCreateRequest(BaseModel):
     consent_wording_key: str
     # When the recorder tapped "Yes, they've agreed"; defaults to now.
     consented_at: Optional[datetime] = None
-    # Language the recorder says the audio is in; passed to Whisper for accuracy.
+    # Language the recorder says the audio is in; passed to ElevenLabs for accuracy.
     audio_language: Optional[Language] = None
 
 

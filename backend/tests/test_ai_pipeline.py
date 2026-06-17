@@ -45,28 +45,36 @@ def _make_audio_upload(name: str = "story.wav", content: bytes = b"audio-bytes")
     return UploadFile(file=io.BytesIO(content), filename=name)
 
 
-def _make_fake_transcription():
-    segment_0 = SimpleNamespace(start=0.0, end=1.2, text="សួស្តី")
-    segment_1 = SimpleNamespace(start=1.2, end=2.4, text="Hello again")
-    word_0 = SimpleNamespace(word="សួស្តី", start=0.0, end=1.2)
-    word_1 = SimpleNamespace(word="Hello", start=1.2, end=1.8)
-    word_2 = SimpleNamespace(word="again", start=1.8, end=2.4)
-    return SimpleNamespace(segments=[segment_0, segment_1], words=[word_0, word_1, word_2])
-
 
 def _patch_happy_path(monkeypatch):
-    class FakeTranscriptions:
-        def create(self, **kwargs):
-            return _make_fake_transcription()
+    async def _fake_transcribe(session, story, *, trace_parent=None):
+        from app.models.enums import Language, LanguageDetected
+        story.processing_step = "transcription"
+        story.language_detected = LanguageDetected.mixed
+        session.add(
+            TranscriptSegment(
+                story_id=story.id,
+                language=Language.kh,
+                segment_index=0,
+                start_ms=0,
+                end_ms=1200,
+                original_text="សួស្តី",
+            )
+        )
+        session.add(
+            TranscriptSegment(
+                story_id=story.id,
+                language=Language.en,
+                segment_index=1,
+                start_ms=1200,
+                end_ms=2400,
+                original_text="Hello again",
+            )
+        )
+        session.add(story)
+        session.commit()
 
-    class FakeAudio:
-        transcriptions = FakeTranscriptions()
-
-    class FakeClient:
-        audio = FakeAudio()
-
-    monkeypatch.setattr(ai_pipeline, "_openai_client", lambda: FakeClient())
-    monkeypatch.setattr(ai_pipeline, "download_audio_file", lambda storage_key: b"fake-audio")
+    monkeypatch.setattr(ai_pipeline, "_transcribe", _fake_transcribe)
     monkeypatch.setattr(ai_pipeline, "_check_audio_quality", _fake_quality_step)
     monkeypatch.setattr(ai_pipeline, "_translate_text", lambda text, source, target: f"{text} ({source.value}->{target.value})")
 
