@@ -13,3 +13,4 @@ openai
 librosa
 soundfile
 numpy
+langsmith

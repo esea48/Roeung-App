@@ -30,6 +30,15 @@ from app.services.ai_pipeline import run_pipeline
 router = APIRouter(prefix="/f/{access_token}/stories", tags=["stories"])
 
 
+async def enqueue_story_pipeline(story_id: str) -> None:
+    """Background-task wrapper for the ARQ pipeline entrypoint.
+
+    Keeping this wrapper makes it easy to monkeypatch in tests and keeps the
+    route code readably explicit about the task it queues.
+    """
+    await run_pipeline(str(story_id))
+
+
 def _get_family_story(session: Session, family: Family, story_id: uuid.UUID) -> Story:
     story = session.get(Story, story_id)
     if story is None or story.family_id != family.id:
@@ -115,7 +124,7 @@ def create_story(
 @router.post("/{story_id}/audio", response_model=AudioFileResponse, status_code=status.HTTP_201_CREATED)
 async def upload_story_audio(
     story_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks = None,
     file: UploadFile = File(...),
     family: Family = Depends(get_family),
     session: Session = Depends(get_session),
@@ -135,7 +144,10 @@ async def upload_story_audio(
     existing = session.exec(select(AudioFile).where(AudioFile.story_id == story.id)).first()
     if existing is not None:
         await file.read()  # consume the request body
-        background_tasks.add_task(run_pipeline, str(story.id))
+        if background_tasks is None:
+            await enqueue_story_pipeline(story.id)
+        else:
+            background_tasks.add_task(enqueue_story_pipeline, story.id)
         return existing
 
     content = await file.read()
@@ -153,7 +165,10 @@ async def upload_story_audio(
     session.commit()
     session.refresh(audio)
 
-    background_tasks.add_task(run_pipeline, str(story.id))
+    if background_tasks is None:
+        await enqueue_story_pipeline(story.id)
+    else:
+        background_tasks.add_task(enqueue_story_pipeline, story.id)
 
     return audio
 

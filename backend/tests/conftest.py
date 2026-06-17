@@ -18,6 +18,10 @@ os.environ["SUPABASE_URL"] = "http://localhost"
 os.environ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key"
 os.environ["OPENAI_API_KEY"] = ""
 os.environ["GOOGLE_TRANSLATE_API_KEY"] = ""
+os.environ["LANGSMITH_API_KEY"] = ""
+os.environ["LANGSMITH_ENDPOINT"] = ""
+os.environ["LANGSMITH_PROJECT"] = ""
+os.environ["LANGSMITH_TRACING_V2"] = ""
 from app.core import config as app_config  # noqa: E402
 
 app_config.Settings.database_url = "sqlite://"
@@ -27,6 +31,10 @@ app_config.Settings.supabase_url = os.environ["SUPABASE_URL"]
 app_config.Settings.supabase_service_role_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 app_config.Settings.openai_api_key = os.environ["OPENAI_API_KEY"]
 app_config.Settings.google_translate_api_key = os.environ["GOOGLE_TRANSLATE_API_KEY"]
+app_config.Settings.langsmith_api_key = os.environ["LANGSMITH_API_KEY"]
+app_config.Settings.langsmith_api_url = os.environ["LANGSMITH_ENDPOINT"]
+app_config.Settings.langsmith_project_name = os.environ["LANGSMITH_PROJECT"] or "roeung-ai"
+app_config.Settings.langsmith_tracing_v2 = False
 get_settings.cache_clear()
 
 import app.db as app_db  # noqa: E402

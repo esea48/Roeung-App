@@ -10,10 +10,13 @@ If a step raises, the error is recorded on `stories.processing_error` and
 
 import io
 import json
+import inspect
 import logging
 import re
 import uuid
 from functools import lru_cache
+from time import perf_counter
+from typing import Any
 
 import httpx
 import librosa
@@ -32,6 +35,12 @@ from app.models import (
     TranslationSegment,
 )
 from app.models.enums import Language, LanguageDetected, StoryStatus
+from app.services.langsmith import (
+    finish_run,
+    trace_pipeline_run,
+    trace_pipeline_step,
+    traced_llm_json,
+)
 from app.services.storage import download_audio_file
 
 logger = logging.getLogger(__name__)
@@ -39,8 +48,27 @@ logger = logging.getLogger(__name__)
 _KHMER_RE = re.compile(r"[ក-៿]")
 
 
+def _enum_value(value: Any | None) -> str | None:
+    if value is None:
+        return None
+    return getattr(value, "value", value)
+
+
 class _StoryRejected(Exception):
     """Raised by a step to stop the pipeline without recording an error."""
+
+
+async def _run_step(step, session: Session, story: Story, trace_parent: Any | None) -> None:
+    """Call a step with optional tracing support.
+
+    Older tests and ad-hoc monkeypatches may still provide step doubles that do
+    not accept `trace_parent`, so we inspect the callable before passing it.
+    """
+    params = inspect.signature(step).parameters
+    if "trace_parent" in params:
+        await step(session, story, trace_parent=trace_parent)
+    else:
+        await step(session, story)
 
 
 async def run_pipeline(story_id: str) -> None:
@@ -56,34 +84,117 @@ async def run_pipeline(story_id: str) -> None:
         session.commit()
 
         steps = [
-            _check_audio_quality,
-            _transcribe,
-            _translate,
-            _review_cultural_flags,
-            _generate_titles,
-            _flag_people,
-            _score_translation,
+            ("audio_quality_check", _check_audio_quality),
+            ("transcription", _transcribe),
+            ("translation", _translate),
+            ("cultural_flag_review", _review_cultural_flags),
+            ("title_generation", _generate_titles),
+            ("people_flagging", _flag_people),
+            ("scoring", _score_translation),
         ]
 
-        for step in steps:
-            try:
-                await step(session, story)
-            except _StoryRejected:
-                session.commit()
-                return
-            except Exception as exc:
-                logger.exception(
-                    "process_story: step %s failed for story %s", step.__name__, story_id
-                )
-                story.processing_error = str(exc)
-                session.add(story)
-                session.commit()
-                return
+        with trace_pipeline_run(story) as root_run:
+            for step_name, step in steps:
+                step_model = {
+                    "audio_quality_check": "librosa-snr",
+                    "transcription": "elevenlabs/scribe_v2",
+                    "translation": "google-translate-v2",
+                    "cultural_flag_review": "gpt-4o-mini",
+                    "title_generation": "gpt-4o-mini",
+                    "people_flagging": "gpt-4o-mini",
+                    "scoring": "mean-confidence-score",
+                }.get(step_name)
+                source_language = _enum_value(getattr(story, "language_detected", None) or story.audio_language)
+                step_started = perf_counter()
+                with trace_pipeline_step(
+                    root_run,
+                    story,
+                    step=step_name,
+                    run_type="tool",
+                    inputs={"story_id": str(story.id), "family_id": str(story.family_id)},
+                    model=step_model,
+                    source_language=source_language,
+                    processing_step=step_name,
+                ) as step_run:
+                    try:
+                        await _run_step(step, session, story, step_run)
+                    except _StoryRejected:
+                        finish_run(
+                            step_run,
+                            story,
+                            step=step_name,
+                            outcome="rejected",
+                            model=step_model,
+                            processing_step=step_name,
+                            extra={"latency_ms": int((perf_counter() - step_started) * 1000)},
+                        )
+                        story.processing_step = None
+                        session.add(story)
+                        session.commit()
+                        finish_run(
+                            root_run,
+                            story,
+                            step="roeung.ai_pipeline",
+                            outcome="rejected",
+                            model="pipeline",
+                            outputs={"status": StoryStatus.rejected.value},
+                            processing_step=None,
+                        )
+                        return
+                    except Exception as exc:
+                        logger.exception(
+                            "process_story: step %s failed for story %s", step.__name__, story_id
+                        )
+                        story.processing_error = str(exc)
+                        session.add(story)
+                        session.commit()
+                        finish_run(
+                            step_run,
+                            story,
+                            step=step_name,
+                            outcome="error",
+                            model=step_model,
+                            processing_step=step_name,
+                            error=str(exc),
+                            extra={
+                                "latency_ms": int((perf_counter() - step_started) * 1000),
+                                "error_type": type(exc).__name__,
+                            },
+                        )
+                        finish_run(
+                            root_run,
+                            story,
+                            step="roeung.ai_pipeline",
+                            outcome="error",
+                            model="pipeline",
+                            error=str(exc),
+                            outputs={"status": StoryStatus.processing.value},
+                        )
+                        return
+                    else:
+                        finish_run(
+                            step_run,
+                            story,
+                            step=step_name,
+                            outcome="success",
+                            model=step_model,
+                            processing_step=step_name,
+                            extra={"latency_ms": int((perf_counter() - step_started) * 1000)},
+                        )
 
-        story.status = StoryStatus.awaiting_review
-        story.processing_step = None
-        session.add(story)
-        session.commit()
+            story.status = StoryStatus.awaiting_review
+            story.processing_step = None
+            session.add(story)
+            session.commit()
+            finish_run(
+                root_run,
+                story,
+                step="roeung.ai_pipeline",
+                outcome="success",
+                model="pipeline",
+                outputs={"status": StoryStatus.awaiting_review.value},
+                processing_step=None,
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -142,19 +253,79 @@ def _translate_text(text: str, source: Language, target: Language) -> str:
     return response.json()["data"]["translations"][0]["translatedText"]
 
 
-def _chat_json(*, system: str, user: str, schema_hint: str) -> dict:
-    response = _openai_client().chat.completions.create(
+def _chat_json(
+    *,
+    story: Story,
+    parent_run: Any | None,
+    step: str,
+    system: str,
+    user: str,
+    schema_hint: str,
+    source_language: str | None = None,
+    target_language: str | None = None,
+    processing_step: str | None = None,
+) -> dict:
+    def _call() -> dict:
+        response = _openai_client().chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"{system}\n\nRespond with JSON matching this shape: {schema_hint}",
+                },
+                {"role": "user", "content": user},
+            ],
+            response_format={"type": "json_object"},
+        )
+        return json.loads(response.choices[0].message.content)
+
+    return traced_llm_json(
+        parent_run,
+        story,
+        step=step,
         model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"{system}\n\nRespond with JSON matching this shape: {schema_hint}",
-            },
-            {"role": "user", "content": user},
-        ],
-        response_format={"type": "json_object"},
+        system=system,
+        user=user,
+        schema_hint=schema_hint,
+        source_language=source_language,
+        target_language=target_language,
+        processing_step=processing_step,
+        call_fn=_call,
     )
-    return json.loads(response.choices[0].message.content)
+
+
+def _call_chat_json(
+    *,
+    story: Story,
+    parent_run: Any | None,
+    step: str,
+    system: str,
+    user: str,
+    schema_hint: str,
+    source_language: str | None = None,
+    target_language: str | None = None,
+    processing_step: str | None = None,
+) -> dict:
+    """Call `_chat_json` with tracing when the active implementation supports it.
+
+    The test suite monkeypatches `_chat_json` with a simpler fake that only
+    accepts the original three arguments. This adapter preserves that contract
+    while letting the production implementation opt into tracing metadata.
+    """
+    params = inspect.signature(_chat_json).parameters
+    if "story" in params:
+        return _chat_json(
+            story=story,
+            parent_run=parent_run,
+            step=step,
+            system=system,
+            user=user,
+            schema_hint=schema_hint,
+            source_language=source_language,
+            target_language=target_language,
+            processing_step=processing_step,
+        )
+    return _chat_json(system=system, user=user, schema_hint=schema_hint)
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +359,9 @@ def _to_wav_bytes(audio_bytes: bytes) -> bytes:
     return result.stdout
 
 
-async def _check_audio_quality(session: Session, story: Story) -> None:
+async def _check_audio_quality(
+    session: Session, story: Story, *, trace_parent: Any | None = None
+) -> None:
     story.processing_step = "audio_quality_check"
     session.add(story)
     session.commit()
@@ -233,11 +406,19 @@ def _segment_elevenlabs_words(
     seg_end_ms: int | None = None
     last_word_end: float | None = None
 
+    def _field(item: Any, key: str, default: Any = None) -> Any:
+        if isinstance(item, dict):
+            return item.get(key, default)
+        return getattr(item, key, default)
+
     for i, w in enumerate(words):
-        wtype = w.get("type")
-        wtext = w.get("text", "")
-        wstart = w.get("start")
-        wend = w.get("end")
+        wtype = _field(w, "type")
+        wtext = _field(w, "text", _field(w, "word", ""))
+        wstart = _field(w, "start")
+        wend = _field(w, "end")
+
+        if wtype is None and wtext:
+            wtype = "word"
 
         if wtype == "audio_event":
             continue
@@ -291,7 +472,7 @@ def _segment_elevenlabs_words(
     return segments
 
 
-async def _transcribe(session: Session, story: Story) -> None:
+async def _transcribe(session: Session, story: Story, *, trace_parent: Any | None = None) -> None:
     story.processing_step = "transcription"
     session.add(story)
     session.commit()
@@ -354,7 +535,7 @@ async def _transcribe(session: Session, story: Story) -> None:
     session.commit()
 
 
-async def _translate(session: Session, story: Story) -> None:
+async def _translate(session: Session, story: Story, *, trace_parent: Any | None = None) -> None:
     story.processing_step = "translation"
     session.add(story)
     session.commit()
@@ -383,7 +564,9 @@ async def _translate(session: Session, story: Story) -> None:
     session.commit()
 
 
-async def _review_cultural_flags(session: Session, story: Story) -> None:
+async def _review_cultural_flags(
+    session: Session, story: Story, *, trace_parent: Any | None = None
+) -> None:
     story.processing_step = "cultural_flag_review"
     session.add(story)
     session.commit()
@@ -412,7 +595,12 @@ async def _review_cultural_flags(session: Session, story: Story) -> None:
         for i, segment in enumerate(translation_segments)
     ]
 
-    result = _chat_json(
+    result = _call_chat_json(
+        story=story,
+        parent_run=trace_parent,
+        step="cultural_flag_review",
+        processing_step="cultural_flag_review",
+        source_language=_enum_value(getattr(story, "language_detected", None) or story.audio_language),
         system=(
             "You review machine translations of Khmer family oral history "
             "stories for cultural nuance lost in translation. For each item, "
@@ -440,7 +628,9 @@ async def _review_cultural_flags(session: Session, story: Story) -> None:
     session.commit()
 
 
-async def _generate_titles(session: Session, story: Story) -> None:
+async def _generate_titles(
+    session: Session, story: Story, *, trace_parent: Any | None = None
+) -> None:
     story.processing_step = "title_generation"
     session.add(story)
     session.commit()
@@ -456,7 +646,12 @@ async def _generate_titles(session: Session, story: Story) -> None:
     transcript_text = "\n".join(segment.original_text for segment in transcript_segments)
     _replace_story_rows(session, TitleSuggestion, story.id)
 
-    result = _chat_json(
+    result = _call_chat_json(
+        story=story,
+        parent_run=trace_parent,
+        step="title_generation",
+        processing_step="title_generation",
+        source_language=_enum_value(getattr(story, "language_detected", None) or story.audio_language),
         system=(
             "You write short, evocative titles for a family oral history "
             "story, given its transcript. Generate exactly 3 distinct title "
@@ -488,7 +683,7 @@ async def _generate_titles(session: Session, story: Story) -> None:
     session.commit()
 
 
-async def _flag_people(session: Session, story: Story) -> None:
+async def _flag_people(session: Session, story: Story, *, trace_parent: Any | None = None) -> None:
     story.processing_step = "people_flagging"
     session.add(story)
     session.commit()
@@ -504,7 +699,12 @@ async def _flag_people(session: Session, story: Story) -> None:
     transcript_text = "\n".join(segment.original_text for segment in transcript_segments)
     _replace_story_rows(session, AIPeopleMention, story.id)
 
-    result = _chat_json(
+    result = _call_chat_json(
+        story=story,
+        parent_run=trace_parent,
+        step="people_flagging",
+        processing_step="people_flagging",
+        source_language=_enum_value(getattr(story, "language_detected", None) or story.audio_language),
         system=(
             "You identify people mentioned by name in a family oral history "
             "story transcript. List each distinct person, written exactly as "
@@ -523,7 +723,9 @@ async def _flag_people(session: Session, story: Story) -> None:
     session.commit()
 
 
-async def _score_translation(session: Session, story: Story) -> None:
+async def _score_translation(
+    session: Session, story: Story, *, trace_parent: Any | None = None
+) -> None:
     story.processing_step = "scoring"
     session.add(story)
     session.commit()

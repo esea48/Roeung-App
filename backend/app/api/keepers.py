@@ -34,6 +34,7 @@ from app.models import (
 from app.models.common import utcnow
 from app.models.enums import MentionResolutionStatus, StoryStatus, TaggedBy
 from app.models.enums import Language
+from app.services.langsmith import record_feedback
 from app.schemas.family_members import FamilyMemberResponse
 from app.schemas.keepers import (
     ArchivedStoryResponse,
@@ -225,6 +226,28 @@ def update_story(
     session.add(story)
     session.commit()
     session.refresh(story)
+
+    feedback_fields = {
+        key for key in updates if key in {"title_en", "title_kh", "translation_flagged", "chapter_id", "chapter_sort_order", "transcript_edited", "translation_edited"}
+    }
+    if feedback_fields:
+        value: dict[str, object] = {
+            "story_id": str(story.id),
+            "changed_fields": sorted(feedback_fields),
+        }
+        if "translation_flagged" in feedback_fields:
+            value["translation_flagged"] = story.translation_flagged
+        if "chapter_id" in feedback_fields:
+            value["chapter_id"] = str(story.chapter_id) if story.chapter_id else None
+        if "chapter_sort_order" in feedback_fields:
+            value["chapter_sort_order"] = story.chapter_sort_order
+        record_feedback(
+            trace_id=story.id,
+            key="keeper_story_update",
+            value=value,
+            source_info={"surface": "keeper", "route": "update_story"},
+        )
+
     return story
 
 
@@ -255,6 +278,16 @@ def _update_segment_impl(
     session.add(segment)
     session.commit()
     session.refresh(segment)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_segment_edit",
+        value={
+            "story_id": str(story.id),
+            "segment_id": str(segment.id),
+            "segment_type": "translation" if isinstance(segment, TranslationSegment) else "transcript",
+        },
+        source_info={"surface": "keeper", "route": "update_segment"},
+    )
     return segment
 
 
@@ -309,6 +342,17 @@ def publish_story(
     session.add(story)
     session.commit()
     session.refresh(story)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_publish_decision",
+        value={
+            "story_id": str(story.id),
+            "decision": "publish",
+            "translation_flagged": story.translation_flagged,
+            "chapter_id": str(story.chapter_id) if story.chapter_id else None,
+        },
+        source_info={"surface": "keeper", "route": "publish_story"},
+    )
     return story
 
 
@@ -337,6 +381,12 @@ def archive_story(
     session.add(story)
     session.commit()
     session.refresh(story)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_archive_decision",
+        value={"story_id": str(story.id), "decision": "archive"},
+        source_info={"surface": "keeper", "route": "archive_story"},
+    )
     return story
 
 
@@ -364,6 +414,12 @@ def unpublish_story(
     session.add(story)
     session.commit()
     session.refresh(story)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_unpublish_decision",
+        value={"story_id": str(story.id), "decision": "unpublish"},
+        source_info={"surface": "keeper", "route": "unpublish_story"},
+    )
     return story
 
 
@@ -532,6 +588,16 @@ def link_people_mention(
 
     session.commit()
     session.refresh(mention)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_people_link",
+        value={
+            "story_id": str(story.id),
+            "mention_id": str(mention.id),
+            "family_member_id": str(member.id),
+        },
+        source_info={"surface": "keeper", "route": "link_people_mention"},
+    )
     return mention
 
 
@@ -556,6 +622,12 @@ def dismiss_people_mention(
     session.add(mention)
     session.commit()
     session.refresh(mention)
+    record_feedback(
+        trace_id=story.id,
+        key="keeper_people_dismiss",
+        value={"story_id": str(story.id), "mention_id": str(mention.id)},
+        source_info={"surface": "keeper", "route": "dismiss_people_mention"},
+    )
     return mention
 
 

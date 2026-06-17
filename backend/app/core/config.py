@@ -33,6 +33,20 @@ class Settings:
     # OpenAI — GPT-4 cultural review, title generation, people flagging steps.
     openai_api_key: str = os.environ.get("OPENAI_API_KEY") or os.environ.get("openai_api_key", "")
 
+    # LangSmith observability for the AI pipeline.
+    langsmith_api_key: str = os.environ.get("LANGSMITH_API_KEY", "")
+    langsmith_api_url: str = (
+        os.environ.get("LANGSMITH_ENDPOINT")
+        or os.environ.get("LANGCHAIN_ENDPOINT")
+        or ""
+    )
+    langsmith_project_name: str = (
+        os.environ.get("LANGSMITH_PROJECT")
+        or os.environ.get("LANGCHAIN_PROJECT")
+        or "roeung-ai"
+    )
+    langsmith_tracing_v2: bool = os.environ.get("LANGSMITH_TRACING_V2", "").lower() == "true"
+
     # Google Cloud Translation API (v2, key-based) — first-pass translation.
     google_translate_api_key: str = (
         os.environ.get("GOOGLE_TRANSLATE_API_KEY") or os.environ.get("google_api_key", "")
