@@ -1428,3 +1428,172 @@
     display: none;
   }
 }
+
+/* ── Archive list page ───────────────────────────────────────────── */
+
+.archive-keeper-note {
+  font-size: 10px;
+  color: var(--faint2);
+  font-style: italic;
+}
+
+.archive-card {
+  cursor: default;
+  align-items: center;
+}
+
+.archive-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-archive-action {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.12s;
+}
+
+.btn-archive-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-restore {
+  background: transparent;
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.btn-restore:hover:not(:disabled) {
+  background: var(--success-bg);
+}
+
+.btn-delete-story {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.btn-delete-story:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--body);
+  border: 1px solid var(--hairline-strong);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: var(--sand);
+}
+
+.archive-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.archive-confirm-text {
+  font-size: 11px;
+  color: var(--danger);
+  flex-shrink: 1;
+}
+
+/* ── Archive toast notification ──────────────────────────────────── */
+
+.archive-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--surface3);
+  font-size: 12px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  z-index: 50;
+  box-shadow: 0 4px 16px rgba(42, 38, 32, 0.18);
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100vw - 40px);
+  text-align: center;
+}
+
+/* ── Decision bar — delete confirmation state ────────────────────── */
+
+.decision-delete-confirm {
+  font-size: 11px;
+  color: var(--danger);
+  flex: 1;
+}
+
+.btn-delete-confirm {
+  padding: 7px 14px;
+  background: var(--danger);
+  color: var(--surface3);
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: opacity 0.12s;
+  flex-shrink: 0;
+}
+
+.btn-delete-confirm:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.btn-delete-confirm:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Chapter title input (KeeperChapters add row) ───────────────── */
+
+.chapter-title-input {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px dashed var(--hairline-strong);
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.chapter-title-input:focus {
+  outline: none;
+  border-color: var(--clay);
+  border-style: solid;
+}
+
+@media (max-width: 768px) {
+  .archive-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .archive-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .archive-confirm {
+    width: 100%;
+  }
+
+  .archive-confirm-text {
+    width: 100%;
+  }
+}

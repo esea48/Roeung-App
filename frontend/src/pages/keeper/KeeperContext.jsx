@@ -3,6 +3,8 @@ import {
   loginWithSupabase,
   getQueue,
   getKeeperStats,
+  getPublishedStories,
+  getArchivedStories,
   getFamilyMembers,
   getChapters,
 } from '../../api/keeperClient';
@@ -26,6 +28,14 @@ export function KeeperProvider({ children }) {
   const [queueLoading, setQueueLoading] = useState(false);
   const [queueError, setQueueError] = useState(null);
 
+  const [publishedStories, setPublishedStories] = useState([]);
+  const [publishedLoading, setPublishedLoading] = useState(false);
+  const [publishedError, setPublishedError] = useState(null);
+
+  const [archivedStories, setArchivedStories] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [archivedError, setArchivedError] = useState(null);
+
   const [stats, setStats] = useState({ awaiting_review: 0, flagged: 0 });
 
   const [familyMembers, setFamilyMembers] = useState([]);
@@ -47,6 +57,8 @@ export function KeeperProvider({ children }) {
     setToken(null);
     setUser(null);
     setQueue([]);
+    setPublishedStories([]);
+    setArchivedStories([]);
   }, []);
 
   const loadQueue = useCallback(
@@ -64,6 +76,46 @@ export function KeeperProvider({ children }) {
         setQueueError(err.message || 'Failed to load queue');
       } finally {
         setQueueLoading(false);
+      }
+    },
+    [token, logout]
+  );
+
+  const loadPublished = useCallback(
+    async (params = {}) => {
+      if (!token) return;
+      setPublishedLoading(true);
+      setPublishedError(null);
+      try {
+        const data = await getPublishedStories(token, params);
+        setPublishedStories(data);
+      } catch (err) {
+        if (err.message?.includes('401') || err.message?.toLowerCase().includes('unauthorized')) {
+          logout();
+        }
+        setPublishedError(err.message || 'Failed to load published stories');
+      } finally {
+        setPublishedLoading(false);
+      }
+    },
+    [token, logout]
+  );
+
+  const loadArchived = useCallback(
+    async (params = {}) => {
+      if (!token) return;
+      setArchivedLoading(true);
+      setArchivedError(null);
+      try {
+        const data = await getArchivedStories(token, params);
+        setArchivedStories(data);
+      } catch (err) {
+        if (err.message?.includes('401') || err.message?.toLowerCase().includes('unauthorized')) {
+          logout();
+        }
+        setArchivedError(err.message || 'Failed to load archived stories');
+      } finally {
+        setArchivedLoading(false);
       }
     },
     [token, logout]
@@ -109,6 +161,14 @@ export function KeeperProvider({ children }) {
       queueLoading,
       queueError,
       loadQueue,
+      publishedStories,
+      publishedLoading,
+      publishedError,
+      loadPublished,
+      archivedStories,
+      archivedLoading,
+      archivedError,
+      loadArchived,
       stats,
       loadStats,
       familyMembers,
@@ -119,6 +179,8 @@ export function KeeperProvider({ children }) {
     [
       token, user, login, logout,
       queue, queueLoading, queueError, loadQueue,
+      publishedStories, publishedLoading, publishedError, loadPublished,
+      archivedStories, archivedLoading, archivedError, loadArchived,
       stats, loadStats,
       familyMembers, loadFamilyMembers,
       chapters, loadChapters,

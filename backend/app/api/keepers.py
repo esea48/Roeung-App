@@ -14,12 +14,13 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.api.deps import get_current_keeper, verify_keeper_family
-from app.services.storage import get_signed_url
+from app.services.storage import delete_audio_file, get_signed_url
 from app.db import get_session
 from app.models import (
     AIPeopleMention,
     AudioFile,
     Chapter,
+    ConsentLog,
     FamilyMember,
     Keeper,
     KeeperLock,
@@ -34,7 +35,9 @@ from app.models.enums import MentionResolutionStatus, StoryStatus, TaggedBy
 from app.models.enums import Language
 from app.schemas.family_members import FamilyMemberResponse
 from app.schemas.keepers import (
+    ArchivedStoryResponse,
     AudioFileResponse,
+    ChapterCreate,
     ChapterResponse,
     KeeperStoryDetailResponse,
     KeeperStoryResponse,
@@ -43,6 +46,7 @@ from app.schemas.keepers import (
     MentionResponse,
     PeopleLinkRequest,
     PublishRequest,
+    PublishedStoryResponse,
     QueueStoryResponse,
     SegmentResponse,
     SegmentUpdateRequest,
@@ -148,6 +152,7 @@ def lock_story(
     if story.status == StoryStatus.awaiting_review:
         story.status = StoryStatus.in_review
         session.add(story)
+    # Published stories stay published — lock is acquired for editing without status change.
 
     session.commit()
     session.refresh(lock)
@@ -307,7 +312,7 @@ def archive_story(
     """
     story = _get_keeper_story(session, keeper, story_id)
 
-    if story.status not in (StoryStatus.in_review, StoryStatus.published):
+    if story.status not in (StoryStatus.awaiting_review, StoryStatus.in_review, StoryStatus.published):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Story cannot be archived from its current status"
         )
@@ -342,6 +347,124 @@ def unpublish_story(
     story.status = StoryStatus.in_review
     story.published_at = None
     story.published_by = None
+
+    session.add(story)
+    session.commit()
+    session.refresh(story)
+    return story
+
+
+@router.get("/published", response_model=list[PublishedStoryResponse])
+def get_published_stories(
+    filter: str = "",
+    sort: str = "newest",
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> list[PublishedStoryResponse]:
+    """Published stories list for the Keeper Published view."""
+    query = (
+        select(Story)
+        .where(Story.family_id == keeper.family_id)
+        .where(Story.status == StoryStatus.published)
+    )
+    if filter == "kh":
+        query = query.where(Story.language_detected == "kh")
+    elif filter == "en":
+        query = query.where(Story.language_detected == "en")
+
+    order = Story.published_at.asc() if sort == "oldest" else Story.published_at.desc()
+    query = query.order_by(order)
+
+    return session.exec(query).all()
+
+
+@router.get("/archived", response_model=list[ArchivedStoryResponse])
+def get_archived_stories(
+    filter: str = "",
+    sort: str = "newest",
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> list[ArchivedStoryResponse]:
+    """Archived stories list for the Keeper Archive view."""
+    query = (
+        select(Story)
+        .where(Story.family_id == keeper.family_id)
+        .where(Story.status == StoryStatus.archived)
+    )
+    if filter == "kh":
+        query = query.where(Story.language_detected == "kh")
+    elif filter == "en":
+        query = query.where(Story.language_detected == "en")
+
+    order = Story.archived_at.asc() if sort == "oldest" else Story.archived_at.desc()
+    query = query.order_by(order)
+
+    return session.exec(query).all()
+
+
+@router.delete("/stories/{story_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_story(
+    story_id: uuid.UUID,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> None:
+    """GDPR deletion: removes audio, retains consent log, marks story as deleted.
+
+    Per CLAUDE.md invariants:
+    - #2: consent_log row is never deleted — story_deleted_at is set instead.
+    - #4: audio files are never overwritten — object is deleted from storage and
+      storage_key / storage_url fields are cleared.
+    """
+    story = _get_keeper_story(session, keeper, story_id)
+
+    if story.status == StoryStatus.deleted:
+        return  # Already deleted — idempotent
+
+    audio_file = session.exec(
+        select(AudioFile).where(AudioFile.story_id == story.id)
+    ).first()
+    if audio_file and audio_file.storage_key:
+        try:
+            delete_audio_file(audio_file.storage_key)
+        except Exception:
+            pass  # Storage deletion is best-effort; proceed with DB update
+        audio_file.storage_key = None
+        audio_file.storage_url = None
+        session.add(audio_file)
+
+    consent = session.exec(
+        select(ConsentLog).where(ConsentLog.story_id == story.id)
+    ).first()
+    if consent:
+        consent.story_deleted_at = utcnow()
+        session.add(consent)
+
+    story.status = StoryStatus.deleted
+    session.add(story)
+    session.commit()
+
+
+@router.post("/stories/{story_id}/restore", response_model=KeeperStoryResponse)
+def restore_story(
+    story_id: uuid.UUID,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> Story:
+    """Restore an archived story to its previous status.
+
+    If `published_at` is set the story was previously published — restore to
+    `published`. Otherwise restore to `in_review`.
+    """
+    story = _get_keeper_story(session, keeper, story_id)
+
+    if story.status != StoryStatus.archived:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Only an archived story can be restored"
+        )
+
+    story.status = StoryStatus.published if story.published_at else StoryStatus.in_review
+    story.archived_at = None
+    story.archived_by = None
 
     session.add(story)
     session.commit()
@@ -558,3 +681,43 @@ def get_chapters(
         .where(Chapter.family_id == keeper.family_id)
         .order_by(Chapter.sort_order)
     ).all()
+
+
+@router.post("/chapters", response_model=ChapterResponse, status_code=status.HTTP_201_CREATED)
+def create_chapter(
+    body: ChapterCreate,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> Chapter:
+    max_order = session.exec(
+        select(func.max(Chapter.sort_order)).where(Chapter.family_id == keeper.family_id)
+    ).first() or 0
+    chapter = Chapter(
+        family_id=keeper.family_id,
+        title_en=body.title_en,
+        sort_order=max_order + 1,
+    )
+    session.add(chapter)
+    session.commit()
+    session.refresh(chapter)
+    return chapter
+
+
+@router.delete("/chapters/{chapter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_chapter(
+    chapter_id: uuid.UUID,
+    keeper: Keeper = Depends(get_current_keeper),
+    session: Session = Depends(get_session),
+) -> None:
+    chapter = session.get(Chapter, chapter_id)
+    if chapter is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chapter not found")
+    if chapter.family_id != keeper.family_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    # Move assigned stories to uncategorised
+    stories = session.exec(select(Story).where(Story.chapter_id == chapter_id)).all()
+    for story in stories:
+        story.chapter_id = None
+        session.add(story)
+    session.delete(chapter)
+    session.commit()

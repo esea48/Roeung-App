@@ -60,6 +60,12 @@ export const getQueue = (token, params = {}) =>
 export const getKeeperStats = (token) =>
   request('/keeper/stats', {}, token);
 
+export const getPublishedStories = (token, params = {}) =>
+  request(`/keeper/published?${new URLSearchParams(params)}`, {}, token);
+
+export const getArchivedStories = (token, params = {}) =>
+  request(`/keeper/archived?${new URLSearchParams(params)}`, {}, token);
+
 // Story detail + lock lifecycle
 export const getStory = (token, storyId) =>
   request(`/keeper/stories/${storyId}`, {}, token);
@@ -111,6 +117,12 @@ export const archiveStory = (token, storyId) =>
 export const unpublishStory = (token, storyId) =>
   request(`/keeper/stories/${storyId}/unpublish`, { method: 'POST' }, token);
 
+export const deleteStory = (token, storyId) =>
+  request(`/keeper/stories/${storyId}`, { method: 'DELETE' }, token);
+
+export const restoreStory = (token, storyId) =>
+  request(`/keeper/stories/${storyId}/restore`, { method: 'POST' }, token);
+
 // People mentions
 export const linkMention = (token, storyId, mentionId, familyMemberId) =>
   request(`/keeper/stories/${storyId}/people-mentions/${mentionId}/link`, {
@@ -129,3 +141,12 @@ export const getFamilyMembers = (token) =>
 
 export const getChapters = (token) =>
   request('/keeper/chapters', {}, token);
+
+export const createChapter = (token, titleEn) =>
+  request('/keeper/chapters', {
+    method: 'POST',
+    body: JSON.stringify({ title_en: titleEn }),
+  }, token);
+
+export const deleteChapter = (token, chapterId) =>
+  request(`/keeper/chapters/${chapterId}`, { method: 'DELETE' }, token);

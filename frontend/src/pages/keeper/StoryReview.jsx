@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useKeeper } from './KeeperContext';
 import {
   getStory,
@@ -9,6 +9,7 @@ import {
   updateStory,
   publishStory,
   archiveStory,
+  deleteStory,
   linkMention,
   dismissMention,
 } from '../../api/keeperClient';
@@ -348,6 +349,8 @@ function PeopleSection({ tags, mentions, familyMembers, storyId, token, onUpdate
 export default function StoryReview() {
   const { storyId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || 'queue';
   const { token, familyMembers, loadFamilyMembers, chapters, loadChapters } = useKeeper();
 
   const [story, setStory] = useState(null);
@@ -369,6 +372,9 @@ export default function StoryReview() {
   const [view, setView] = useState('review'); // 'review' | 'published' | 'archived'
   const [deciding, setDeciding] = useState(false);
   const [decisionError, setDecisionError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Mobile transcript tab
   const [mobileLang, setMobileLang] = useState('kh');
@@ -382,6 +388,7 @@ export default function StoryReview() {
       const data = await getStory(token, storyId);
       setStory(data);
       setTranslationFlagged(data.translation_flagged ?? false);
+      setChapterId(data.chapter_id || '');
       // Pre-select the first suggestion if no custom title exists
       if (data.title_suggestions?.length > 0 && !data.title_en) {
         setSelectedSuggestionIdx(0);
@@ -471,10 +478,10 @@ export default function StoryReview() {
       const titlePayload = resolvedTitle();
       await updateStory(token, storyId, {
         ...titlePayload,
+        chapter_id: chapterId || null,
         translation_flagged: withFlag || translationFlagged,
       });
       await publishStory(token, storyId, {
-        chapter_id: chapterId || null,
         translation_flagged: withFlag || translationFlagged,
       });
       setView('published');
@@ -498,6 +505,49 @@ export default function StoryReview() {
     }
   }
 
+  async function handleSave() {
+    setDecisionError(null);
+    setDeciding(true);
+    try {
+      await updateStory(token, storyId, {
+        ...resolvedTitle(),
+        translation_flagged: translationFlagged,
+        chapter_id: chapterId || null,
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (err) {
+      setDecisionError(err.message || 'Failed to save');
+    } finally {
+      setDeciding(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await deleteStory(token, storyId);
+      navigate(backPath(), { replace: true });
+    } catch (err) {
+      setDecisionError(err.message || 'Failed to delete');
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function backPath() {
+    if (from === 'published') return '/keeper/published';
+    if (from === 'archive') return '/keeper/archive';
+    return '/keeper';
+  }
+
+  function backLabel() {
+    if (from === 'published') return '← Published';
+    if (from === 'archive') return '← Archive';
+    return '← Queue';
+  }
+
   // ── Published confirmation ────────────────────────────────────────────────
 
   if (view === 'published') {
@@ -514,14 +564,14 @@ export default function StoryReview() {
             <button
               type="button"
               className="btn-back-queue"
-              onClick={() => navigate('/keeper')}
+              onClick={() => navigate(backPath())}
             >
-              Back to queue
+              {backLabel().replace('← ', 'Back to ')}
             </button>
             <button
               type="button"
               className="btn-view-story"
-              onClick={() => navigate('/keeper')}
+              onClick={() => navigate('/keeper/book')}
             >
               View in book →
             </button>
@@ -546,9 +596,16 @@ export default function StoryReview() {
             <button
               type="button"
               className="btn-back-queue"
-              onClick={() => navigate('/keeper')}
+              onClick={() => navigate('/keeper/archive')}
             >
-              Back to queue
+              View archive
+            </button>
+            <button
+              type="button"
+              className="btn-view-story"
+              onClick={() => navigate(backPath())}
+            >
+              {backLabel()}
             </button>
           </div>
         </div>
@@ -590,20 +647,25 @@ export default function StoryReview() {
       {/* Header */}
       <div className="review-header">
         <div className="review-header-left">
-          <button type="button" className="review-back" onClick={() => navigate('/keeper')}>
-            ← Queue
+          <button type="button" className="review-back" onClick={() => navigate(backPath())}>
+            {backLabel()}
           </button>
           <div className="review-narrator">
-            {story.narrator_name}
+            {story.narrator_name_raw}
             {story.narrator_deceased && ' †'}
+            {story.status === 'published' && (
+              <span className="badge badge-published" style={{ marginLeft: '8px', verticalAlign: 'middle' }}>
+                Published
+              </span>
+            )}
           </div>
           {story.narrator_name_kh && (
             <div className="review-narrator-kh">{story.narrator_name_kh}</div>
           )}
           <div className="review-meta">
-            {story.language?.toUpperCase()} ·{' '}
-            {story.duration_seconds
-              ? `${Math.round(story.duration_seconds / 60)} min`
+            {story.language_detected?.toUpperCase()} ·{' '}
+            {story.audio_file?.duration_seconds
+              ? `${Math.round(story.audio_file.duration_seconds / 60)} min`
               : ''}
             {story.submitted_at && (
               <> · Submitted {new Date(story.submitted_at).toLocaleDateString()}</>
@@ -766,6 +828,23 @@ export default function StoryReview() {
             onUpdate={loadStory}
           />
 
+          {/* Chapter assignment */}
+          {story.status === 'published' && (
+            <div className="panel-section">
+              <div className="panel-label">Chapter</div>
+              <select
+                className="chapter-select"
+                value={chapterId}
+                onChange={(e) => setChapterId(e.target.value)}
+              >
+                <option value="">Uncategorised</option>
+                {chapters.map((ch) => (
+                  <option key={ch.id} value={ch.id}>{ch.title_en}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Translation flag */}
           <div className="panel-section">
             <div className="panel-label">Translation quality</div>
@@ -789,47 +868,97 @@ export default function StoryReview() {
 
       {/* Decision bar */}
       <div className="decision-bar">
-        <span className="decision-label">Publish to:</span>
-        <select
-          className="chapter-select"
-          value={chapterId}
-          onChange={(e) => setChapterId(e.target.value)}
-        >
-          <option value="">Uncategorised</option>
-          {chapters.map((ch) => (
-            <option key={ch.id} value={ch.id}>
-              {ch.title_en}
-            </option>
-          ))}
-        </select>
+        {showDeleteConfirm ? (
+          <>
+            <span className="decision-delete-confirm">
+              Permanently delete this story? This cannot be undone.
+            </span>
+            <button
+              type="button"
+              className="btn-delete-confirm"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting…' : 'Delete permanently'}
+            </button>
+            <button
+              type="button"
+              className="btn-publish-flag"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            {story.status !== 'published' && (
+              <>
+                <span className="decision-label">Publish to:</span>
+                <select
+                  className="chapter-select"
+                  value={chapterId}
+                  onChange={(e) => setChapterId(e.target.value)}
+                >
+                  <option value="">Uncategorised</option>
+                  {chapters.map((ch) => (
+                    <option key={ch.id} value={ch.id}>
+                      {ch.title_en}
+                    </option>
+                  ))}
+                </select>
 
-        <button
-          type="button"
-          className="btn-publish"
-          onClick={() => handlePublish(false)}
-          disabled={deciding}
-        >
-          Publish →
-        </button>
+                <button
+                  type="button"
+                  className="btn-publish"
+                  onClick={() => handlePublish(false)}
+                  disabled={deciding}
+                >
+                  Publish →
+                </button>
 
-        <button
-          type="button"
-          className="btn-publish-flag"
-          onClick={() => handlePublish(true)}
-          disabled={deciding}
-          title="Publish and mark translation as approximate"
-        >
-          Publish with ⚠ flag
-        </button>
+                <button
+                  type="button"
+                  className="btn-publish-flag"
+                  onClick={() => handlePublish(true)}
+                  disabled={deciding}
+                  title="Publish and mark translation as approximate"
+                >
+                  Publish with ⚠ flag
+                </button>
+              </>
+            )}
 
-        <button
-          type="button"
-          className="btn-archive"
-          onClick={handleArchive}
-          disabled={deciding}
-        >
-          Archive privately
-        </button>
+            {story.status === 'published' && (
+              <button
+                type="button"
+                className="btn-publish"
+                onClick={handleSave}
+                disabled={deciding}
+              >
+                {saveSuccess ? 'Saved ✓' : 'Save'}
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="btn-archive"
+              onClick={handleArchive}
+              disabled={deciding}
+            >
+              Archive privately
+            </button>
+
+            <button
+              type="button"
+              className="btn-delete-story"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deciding}
+            >
+              Delete
+            </button>
+          </>
+        )}
 
         {decisionError && (
           <span style={{ fontSize: '11px', color: 'var(--danger)', marginLeft: '8px' }}>

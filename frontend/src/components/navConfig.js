@@ -37,6 +37,8 @@ export function createFamilyNavConfig(accessToken) {
 /**
  * Nav items for the Keeper surface.
  * stats: { awaiting_review: number, flagged: number }
+ * Optionally pass activeStoryFrom ('queue'|'published'|'archive') so the correct
+ * nav item is highlighted when viewing a story detail page.
  */
 export function createKeeperNavConfig(stats = {}) {
   return [
@@ -56,6 +58,20 @@ export function createKeeperNavConfig(stats = {}) {
       labelKh: 'ដែលបានសម្គាល់',
       badge: stats.flagged || 0,
       badgeType: 'warn',
+      section: 'review',
+    },
+    {
+      id: 'published',
+      route: '/keeper/published',
+      labelEn: 'Published',
+      labelKh: 'បានបោះពុម្ព',
+      section: 'review',
+    },
+    {
+      id: 'archive',
+      route: '/keeper/archive',
+      labelEn: 'Archive',
+      labelKh: 'បណ្ណសារ',
       section: 'review',
     },
     {
@@ -85,28 +101,41 @@ export function createKeeperNavConfig(stats = {}) {
 /**
  * Returns true when an item should be highlighted as active.
  *
- * location: { pathname: string, search: string }
+ * location: { pathname: string, search: string, state?: { from?: string } }
  * item: one object from createFamilyNavConfig or createKeeperNavConfig
  *
  * Edge cases:
  * - flagged: only active when on /keeper with ?filter=flagged query
  * - queue: active on /keeper root (without flagged filter) AND story detail pages
+ *   where location.state.from is 'queue' or absent (default)
+ * - published: active on /keeper/published and story detail pages where from='published'
+ * - archive: active on /keeper/archive and story detail pages where from='archive'
  * - chapters (family): never active — it's an anchor scroll, not a route
  * - all others: exact match OR path starts with route prefix (ignoring hash/query)
  */
 export function isActive(location, item) {
-  const { pathname, search } = location;
+  const { pathname, search, state } = location;
 
   if (item.id === 'flagged') {
     return pathname === '/keeper' && search === '?filter=flagged';
   }
 
+  const onStoryDetail = pathname.startsWith('/keeper/story/');
+  const storyFrom = state?.from;
+
   if (item.id === 'queue') {
     const onKeeperRoot =
       (pathname === '/keeper' || pathname === '/keeper/') &&
       search !== '?filter=flagged';
-    const onStoryDetail = pathname.startsWith('/keeper/story/');
-    return onKeeperRoot || onStoryDetail;
+    return onKeeperRoot || (onStoryDetail && (!storyFrom || storyFrom === 'queue'));
+  }
+
+  if (item.id === 'published') {
+    return pathname === '/keeper/published' || (onStoryDetail && storyFrom === 'published');
+  }
+
+  if (item.id === 'archive') {
+    return pathname === '/keeper/archive' || (onStoryDetail && storyFrom === 'archive');
   }
 
   // Scroll-only anchors (e.g. family chapters) are never active

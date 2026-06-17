@@ -119,6 +119,32 @@ class MentionResponse(BaseModel):
     resolved_at: Optional[datetime]
 
 
+class PublishedStoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    status: StoryStatus
+    narrator_name_raw: str
+    title_en: Optional[str]
+    title_kh: Optional[str]
+    language_detected: Optional[LanguageDetected]
+    translation_flagged: bool
+    published_at: Optional[datetime]
+    created_at: datetime
+
+
+class ArchivedStoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    status: StoryStatus
+    narrator_name_raw: str
+    title_en: Optional[str]
+    title_kh: Optional[str]
+    archived_at: Optional[datetime]
+    created_at: datetime
+
+
 class StatsResponse(BaseModel):
     awaiting_review: int
     flagged: int
@@ -185,6 +211,10 @@ class AudioFileResponse(BaseModel):
     mime_type: Optional[str]
     duration_seconds: Optional[int]
     file_size_bytes: Optional[int]
+
+
+class ChapterCreate(BaseModel):
+    title_en: str
 
 
 class ChapterResponse(BaseModel):
