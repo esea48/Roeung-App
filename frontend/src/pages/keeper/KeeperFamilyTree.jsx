@@ -104,7 +104,9 @@ function computeGenerations(placed, relationships) {
 
 // ── Auto slot assignment ───────────────────────────────────────
 // Returns { [memberId]: { col, row } } for the default layout.
-function computeAutoSlots(placed, relationships) {
+// slotOverrides: persisted manual positions — used so new children land
+// below their parents' actual visual row, not just their generation level.
+function computeAutoSlots(placed, relationships, slotOverrides = {}) {
   if (!placed.length) return {};
   const { parentsOf, spousesOf } = buildAdjacency(placed, relationships);
   const level = computeGenerations(placed, relationships);
@@ -137,7 +139,21 @@ function computeAutoSlots(placed, relationships) {
     }
     assignedAtLevel[l] = ordered;
 
-    // Try to centre children under their parents from the row above
+    // Effective row: must be strictly below the deepest parent's visual row.
+    // Parents may have been manually dragged to a row that differs from their
+    // generation level, so we check slotOverrides (DB positions) first.
+    let effectiveRow = l;
+    if (l > 0) {
+      const allParents = [...new Set(ordered.flatMap((id) => parentsOf[id] || []))];
+      if (allParents.length > 0) {
+        const maxParentRow = Math.max(
+          ...allParents.map((pid) => slotOverrides[pid]?.row ?? slots[pid]?.row ?? l - 1)
+        );
+        effectiveRow = Math.max(l, maxParentRow + 1);
+      }
+    }
+
+    // Try to centre children under their parents' visual columns (override-aware).
     let startCol = 0;
     if (l > 0 && assignedAtLevel[l - 1]) {
       const parents = assignedAtLevel[l - 1];
@@ -145,8 +161,8 @@ function computeAutoSlots(placed, relationships) {
         ordered.some((cid) => parentsOf[cid]?.includes(pid))
       );
       if (relevantParents.length > 0) {
-        const minParentCol = Math.min(...relevantParents.map((pid) => slots[pid]?.col ?? 0));
-        const maxParentCol = Math.max(...relevantParents.map((pid) => slots[pid]?.col ?? 0));
+        const minParentCol = Math.min(...relevantParents.map((pid) => slotOverrides[pid]?.col ?? slots[pid]?.col ?? 0));
+        const maxParentCol = Math.max(...relevantParents.map((pid) => slotOverrides[pid]?.col ?? slots[pid]?.col ?? 0));
         const parentCentreX =
           CANVAS_PAD + ((minParentCol + maxParentCol) * (NODE_W + GAP_X)) / 2 + NODE_W / 2;
         const totalW = ordered.length * NODE_W + (ordered.length - 1) * GAP_X;
@@ -156,7 +172,7 @@ function computeAutoSlots(placed, relationships) {
     }
 
     for (let i = 0; i < ordered.length; i++) {
-      slots[ordered[i]] = { col: startCol + i, row: l };
+      slots[ordered[i]] = { col: startCol + i, row: effectiveRow };
     }
   }
 
@@ -247,51 +263,6 @@ const REL_LABELS = { parent: 'Parent', child: 'Child', spouse: 'Spouse', sibling
 const REL_OPPOSITE = { parent: 'child', child: 'parent', spouse: 'spouse', sibling: 'sibling' };
 
 // ── Sub-components ─────────────────────────────────────────────
-
-function UnplacedSidebar({ unplaced, onChipClick }) {
-  return (
-    <div className="tree-unplaced">
-      <div className="tree-unplaced-header">
-        <span className="tree-unplaced-label">Unplaced members</span>
-        <span className="tree-unplaced-count">{unplaced.length}</span>
-      </div>
-      <div className="tree-unplaced-hint">
-        From story mentions. Click to connect.
-      </div>
-      <div className="tree-unplaced-list">
-        {unplaced.length === 0 && (
-          <div className="tree-unplaced-empty">All members placed</div>
-        )}
-        {unplaced.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className="tree-unplaced-chip"
-            onClick={() => onChipClick(m)}
-          >
-            <div className="tree-chip-avatar" />
-            <div style={{ minWidth: 0 }}>
-              <div className="tree-chip-name">
-                {m.name_en}
-                {m.is_deceased && <span className="tree-dagger">†</span>}
-              </div>
-              {m.name_kh && <div className="tree-chip-name-kh">{m.name_kh}</div>}
-            </div>
-          </button>
-        ))}
-      </div>
-      <div className="tree-gen-legend">
-        <div className="tree-gen-legend-label">Generations</div>
-        {['Grandparents', 'Parents', 'Children'].map((label, i) => (
-          <div key={label} className="tree-gen-legend-row">
-            <span className={`tree-gen-swatch tree-gen-swatch-${i}`} />
-            <span className="tree-gen-legend-text">{label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function TreeNode({ node, isSelected, isDragging, onMouseDown }) {
   const { member, x, y, gen } = node;
@@ -392,6 +363,8 @@ function NodeActionRing({ node, onAdd }) {
             type="button"
             className="tree-ring-btn"
             style={{ position: 'absolute', left: bx - left, top: by - top }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); onAdd(rel); }}
           >
             +
@@ -1037,7 +1010,7 @@ function EditMemberDrawer({ member, onClose, onSaved }) {
 
 // ── Main component ─────────────────────────────────────────────
 export default function KeeperFamilyTree() {
-  const { token } = useKeeper();
+  const { token, logout } = useKeeper();
   const [treeData, setTreeData] = useState(null); // { placed, unplaced, relationships }
   const [allMembers, setAllMembers] = useState([]); // placed + unplaced combined for search
   const [loading, setLoading] = useState(true);
@@ -1066,11 +1039,15 @@ export default function KeeperFamilyTree() {
       setTreeData(data);
       setAllMembers([...data.placed, ...data.unplaced]);
     } catch (e) {
+      if (e.message?.includes('401') || e.message?.toLowerCase().includes('unauthorized')) {
+        logout();
+        return;
+      }
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, logout]);
 
   useEffect(() => { loadTree(); }, [loadTree]);
 
@@ -1092,8 +1069,8 @@ export default function KeeperFamilyTree() {
 
   // Auto-computed slot positions (fall back when no manual override)
   const autoSlots = useMemo(
-    () => computeAutoSlots(placed, relationships),
-    [placed, relationships]
+    () => computeAutoSlots(placed, relationships, slotOverrides),
+    [placed, relationships, slotOverrides]
   );
 
   // Merged: manual overrides win over auto-layout
@@ -1175,11 +1152,7 @@ export default function KeeperFamilyTree() {
     setDrawerState({ relationship, anchorId, preselectedMember: null });
   }
 
-  function openLinkDrawer(unplacedMember) {
-    setDrawerState({ relationship: null, anchorId: null, preselectedMember: unplacedMember });
-  }
-
-  async function handleSaved() {
+async function handleSaved() {
     setDrawerState(null);
     setSelectedId(null);
     await loadTree();
@@ -1334,21 +1307,24 @@ export default function KeeperFamilyTree() {
               Drag nodes to rearrange. Relationships stay intact.
             </div>
           </div>
-          {hasOverrides && (
-            <button type="button" className="tree-reset-layout-btn" onClick={handleResetLayout}>
-              Reset layout
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {hasOverrides && (
+              <button type="button" className="tree-reset-layout-btn" onClick={handleResetLayout}>
+                Reset layout
+              </button>
+            )}
+            <button
+              type="button"
+              className="tree-add-member-btn"
+              onClick={() => setDrawerState({ relationship: null, anchorId: null, preselectedMember: null })}
+            >
+              + Add new member
             </button>
-          )}
+          </div>
         </div>
       </div>
 
       <div className="tree-body">
-        {/* Left: unplaced sidebar */}
-        <UnplacedSidebar
-          unplaced={unplaced}
-          onChipClick={openLinkDrawer}
-        />
-
         {/* Centre: canvas */}
         {isEmpty ? (
           <div className="tree-canvas-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1381,8 +1357,6 @@ export default function KeeperFamilyTree() {
               {/* Info chip */}
               <div className="tree-canvas-info" style={{ position: 'absolute' }}>
                 <span className="tree-canvas-info-count">❧ {placed.length} members</span>
-                <span className="tree-canvas-info-dot" />
-                <span className="tree-canvas-info-unplaced">{unplaced.length} unplaced</span>
               </div>
 
               {/* SVG connectors (behind nodes) */}

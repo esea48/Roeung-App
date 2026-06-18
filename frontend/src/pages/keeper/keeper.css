@@ -1910,9 +1910,32 @@
   border-color: rgba(163, 98, 62, 0.6);
 }
 
+.tree-add-member-btn {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding: 6px 14px;
+  font: 500 12px/1 var(--font-sans);
+  color: #fff;
+  background: var(--clay);
+  border: 1px solid var(--clay);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.tree-add-member-btn:hover {
+  background: color-mix(in srgb, var(--clay) 85%, #000);
+  border-color: color-mix(in srgb, var(--clay) 85%, #000);
+}
+
 .tree-node-gen-0 {
   background: #ecdcc6;
   border-color: rgba(163, 98, 62, 0.3);
+}
+
+.tree-node-gen-1 {
+  background: #f4eee2;
+  border-color: rgba(42, 38, 32, 0.14);
 }
 
 .tree-node-gen-2,
