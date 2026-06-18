@@ -8,6 +8,7 @@ If a step raises, the error is recorded on `stories.processing_error` and
 `status` is left as `'processing'` so a retry can pick up where it left off.
 """
 
+import contextvars
 import io
 import json
 import inspect
@@ -47,6 +48,16 @@ logger = logging.getLogger(__name__)
 
 _KHMER_RE = re.compile(r"[ក-៿]")
 
+_pipeline_tokens: contextvars.ContextVar[list[int]] = contextvars.ContextVar(
+    "_pipeline_tokens", default=None
+)
+
+
+def _track_tokens(usage: Any) -> None:
+    acc = _pipeline_tokens.get(None)
+    if acc is not None and usage is not None:
+        acc.append(usage.total_tokens)
+
 
 def _enum_value(value: Any | None) -> str | None:
     if value is None:
@@ -72,6 +83,9 @@ async def _run_step(step, session: Session, story: Story, trace_parent: Any | No
 
 
 async def run_pipeline(story_id: str) -> None:
+    token_acc: list[int] = []
+    _pipeline_tokens.set(token_acc)
+
     with Session(engine) as session:
         story = session.get(Story, uuid.UUID(story_id))
         if story is None:
@@ -98,7 +112,7 @@ async def run_pipeline(story_id: str) -> None:
                 step_model = {
                     "audio_quality_check": "librosa-snr",
                     "transcription": "elevenlabs/scribe_v2",
-                    "translation": "google-translate-v2",
+                    "translation": "gpt-4o-mini",
                     "cultural_flag_review": "gpt-4o-mini",
                     "title_generation": "gpt-4o-mini",
                     "people_flagging": "gpt-4o-mini",
@@ -129,6 +143,7 @@ async def run_pipeline(story_id: str) -> None:
                             extra={"latency_ms": int((perf_counter() - step_started) * 1000)},
                         )
                         story.processing_step = None
+                        story.pipeline_tokens_used = sum(token_acc)
                         session.add(story)
                         session.commit()
                         finish_run(
@@ -146,6 +161,7 @@ async def run_pipeline(story_id: str) -> None:
                             "process_story: step %s failed for story %s", step.__name__, story_id
                         )
                         story.processing_error = str(exc)
+                        story.pipeline_tokens_used = sum(token_acc)
                         session.add(story)
                         session.commit()
                         finish_run(
@@ -184,6 +200,7 @@ async def run_pipeline(story_id: str) -> None:
 
             story.status = StoryStatus.awaiting_review
             story.processing_step = None
+            story.pipeline_tokens_used = sum(token_acc)
             session.add(story)
             session.commit()
             finish_run(
@@ -235,22 +252,32 @@ def _replace_story_rows(session: Session, model, story_id: uuid.UUID) -> None:
     session.exec(delete(model).where(model.story_id == story_id))
 
 
-_GOOGLE_LANG = {"kh": "km"}   # internal code → BCP 47 code expected by Google
 _ELEVENLABS_LANG = {"kh": "km", "en": "en"}  # internal code → ISO 639-1 expected by ElevenLabs
+
+_LANG_NAMES = {Language.kh: "Khmer", Language.en: "English"}
 
 
 def _translate_text(text: str, source: Language, target: Language) -> str:
-    settings = get_settings()
-    src = _GOOGLE_LANG.get(source.value, source.value)
-    tgt = _GOOGLE_LANG.get(target.value, target.value)
-    response = httpx.post(
-        "https://translation.googleapis.com/language/translate/v2",
-        params={"key": settings.google_translate_api_key},
-        json={"q": text, "source": src, "target": tgt, "format": "text"},
-        timeout=30,
+    src_name = _LANG_NAMES[source]
+    tgt_name = _LANG_NAMES[target]
+    response = _openai_client().chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    f"You are a professional translator specializing in Khmer and English. "
+                    f"Translate the following {src_name} text into {tgt_name}. "
+                    "This is from a Cambodian family oral history recording — preserve cultural "
+                    "names, honorifics, and relational terms as closely as possible. "
+                    "Return only the translated text, nothing else."
+                ),
+            },
+            {"role": "user", "content": text},
+        ],
     )
-    response.raise_for_status()
-    return response.json()["data"]["translations"][0]["translatedText"]
+    _track_tokens(response.usage)
+    return response.choices[0].message.content.strip()
 
 
 def _chat_json(
@@ -277,6 +304,7 @@ def _chat_json(
             ],
             response_format={"type": "json_object"},
         )
+        _track_tokens(response.usage)
         return json.loads(response.choices[0].message.content)
 
     return traced_llm_json(

@@ -111,6 +111,22 @@
 
 ---
 
+## 14. librosa for audio quality checking
+
+**Decision:** Use `librosa` to compute an RMS-based SNR (signal-to-noise ratio) score for the audio quality check step. Audio is first converted to WAV via `ffmpeg`, then loaded with `librosa.load()` and scored using `librosa.feature.rms()`.
+
+**Why:** librosa was a convenient, well-known Python audio library with a simple API for the task. The computation itself (RMS energy → SNR estimate) doesn't require anything librosa-specific — `soundfile` + `numpy` could do the same with less dependency weight (librosa pulls in scipy and numba). Chosen for speed of implementation, not unique capability. Worth revisiting if dependency size becomes a concern.
+
+---
+
+## 15. Translation uses GPT-4o-mini (not Google Translate)
+
+**Decision:** Replace Google Cloud Translation API v2 with GPT-4o-mini for the translation step. Each transcript segment is translated in a dedicated chat completion call, with a system prompt that instructs the model to preserve cultural names, honorifics, and relational terms.
+
+**Why:** GPT-4o-mini handles Khmer cultural nuance better than Google Translate for family oral history content — names, relational terms (e.g. ឪពុក, បងប្អូន), and idiomatic speech are more reliably preserved. It also consolidates the pipeline onto a single provider (OpenAI), removing the Google Cloud dependency and its separate API key. The tradeoff is higher per-segment latency and cost compared to Google Translate, but the quality improvement is worth it for this use case.
+
+---
+
 ## Open Questions (not yet closed)
 
 | # | Question | Flow affected |

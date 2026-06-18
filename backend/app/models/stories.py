@@ -64,6 +64,8 @@ class Story(SQLModel, table=True):
     processing_step: Optional[str] = None
     # Set if an AI pipeline step fails; status stays 'processing' so a retry can run.
     processing_error: Optional[str] = None
+    # Total OpenAI tokens consumed across all pipeline steps for this story.
+    pipeline_tokens_used: Optional[int] = None
 
     # Keeper's full edited transcript/translation (story-level; set in review UI).
     transcript_edited: Optional[str] = None

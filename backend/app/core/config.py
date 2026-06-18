@@ -47,11 +47,6 @@ class Settings:
     )
     langsmith_tracing_v2: bool = os.environ.get("LANGSMITH_TRACING_V2", "").lower() == "true"
 
-    # Google Cloud Translation API (v2, key-based) — first-pass translation.
-    google_translate_api_key: str = (
-        os.environ.get("GOOGLE_TRANSLATE_API_KEY") or os.environ.get("google_api_key", "")
-    )
-
     # Below this mean translation confidence score, the pipeline sets
     # stories.translation_flagged = true (CLAUDE.md "AI Pipeline" step 7).
     translation_confidence_threshold: float = float(
