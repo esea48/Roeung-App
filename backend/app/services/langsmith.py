@@ -7,7 +7,7 @@ import logging
 import time
 from functools import lru_cache
 from typing import Any, Iterator
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from langsmith import Client, trace
 
@@ -108,7 +108,7 @@ def trace_pipeline_run(story: Any) -> Iterator[Any | None]:
     with trace(
         ROOT_TRACE_NAME,
         run_type="chain",
-        run_id=_story_id(story),
+        run_id=str(uuid4()),
         project_name=project_name(),
         client=client,
         inputs=pipeline_inputs(story),
