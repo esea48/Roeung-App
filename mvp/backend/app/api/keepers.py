@@ -713,7 +713,10 @@ def get_story_detail(
     if audio_file:
         audio_response = AudioFileResponse.model_validate(audio_file)
         if audio_file.storage_key and not audio_file.storage_url:
-            audio_response.storage_url = get_signed_url(audio_file.storage_key)
+            try:
+                audio_response.storage_url = get_signed_url(audio_file.storage_key)
+            except Exception:
+                pass  # storage error — page still loads, audio player will show no URL
         result.audio_file = audio_response
     else:
         result.audio_file = None

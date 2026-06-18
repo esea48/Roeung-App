@@ -1017,8 +1017,8 @@
 }
 
 .audio-lang-btn.active {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--clay);
+  background: var(--clay);
   color: #fff;
 }
 
