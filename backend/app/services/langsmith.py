@@ -192,7 +192,7 @@ def finish_run(
     )
     final_outputs: dict[str, Any] = dict(outputs) if outputs else {}
     if usage_metadata:
-        final_outputs["usage_metadata"] = usage_metadata
+        run.set(usage_metadata=usage_metadata)
     run.end(outputs=final_outputs, error=error, metadata=metadata)
 
 
