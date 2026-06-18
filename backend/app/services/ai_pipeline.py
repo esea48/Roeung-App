@@ -41,6 +41,7 @@ from app.services.langsmith import (
     trace_pipeline_run,
     trace_pipeline_step,
     traced_llm_json,
+    traced_llm_text,
 )
 from app.services.storage import download_audio_file
 
@@ -48,8 +49,13 @@ logger = logging.getLogger(__name__)
 
 _KHMER_RE = re.compile(r"[ក-៿]")
 
+SCRIBE_V2_RATE_PER_HOUR = 0.22  # ElevenLabs Scribe v2 — update here when pricing changes
+
 _pipeline_tokens: contextvars.ContextVar[list[int]] = contextvars.ContextVar(
     "_pipeline_tokens", default=None
+)
+_pipeline_audio_duration: contextvars.ContextVar[float | None] = contextvars.ContextVar(
+    "_pipeline_audio_duration", default=None
 )
 
 
@@ -85,6 +91,7 @@ async def _run_step(step, session: Session, story: Story, trace_parent: Any | No
 async def run_pipeline(story_id: str) -> None:
     token_acc: list[int] = []
     _pipeline_tokens.set(token_acc)
+    _pipeline_audio_duration.set(None)
 
     with Session(engine) as session:
         story = session.get(Story, uuid.UUID(story_id))
@@ -257,27 +264,58 @@ _ELEVENLABS_LANG = {"kh": "km", "en": "en"}  # internal code → ISO 639-1 expec
 _LANG_NAMES = {Language.kh: "Khmer", Language.en: "English"}
 
 
-def _translate_text(text: str, source: Language, target: Language) -> str:
+def _translate_text(
+    text: str,
+    source: Language,
+    target: Language,
+    *,
+    parent_run: Any | None = None,
+    story: Any | None = None,
+) -> str:
     src_name = _LANG_NAMES[source]
     tgt_name = _LANG_NAMES[target]
-    response = _openai_client().chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    f"You are a professional translator specializing in Khmer and English. "
-                    f"Translate the following {src_name} text into {tgt_name}. "
-                    "This is from a Cambodian family oral history recording — preserve cultural "
-                    "names, honorifics, and relational terms as closely as possible. "
-                    "Return only the translated text, nothing else."
-                ),
-            },
-            {"role": "user", "content": text},
-        ],
+    system = (
+        f"You are a professional translator specializing in Khmer and English. "
+        f"Translate the following {src_name} text into {tgt_name}. "
+        "This is from a Cambodian family oral history recording — preserve cultural "
+        "names, honorifics, and relational terms as closely as possible. "
+        "Return only the translated text, nothing else."
     )
-    _track_tokens(response.usage)
-    return response.choices[0].message.content.strip()
+
+    def _call() -> tuple[str, dict | None]:
+        response = _openai_client().chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": text},
+            ],
+        )
+        _track_tokens(response.usage)
+        usage = None
+        if response.usage is not None:
+            usage = {
+                "input_tokens": response.usage.prompt_tokens,
+                "output_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            }
+        return response.choices[0].message.content.strip(), usage
+
+    if parent_run is not None and story is not None:
+        return traced_llm_text(
+            parent_run,
+            story,
+            step="translate_segment",
+            model="gpt-4o-mini",
+            system=system,
+            user=text,
+            source_language=source.value,
+            target_language=target.value,
+            processing_step="translation",
+            call_fn=_call,
+        )
+
+    result, _ = _call()
+    return result
 
 
 def _chat_json(
@@ -292,7 +330,7 @@ def _chat_json(
     target_language: str | None = None,
     processing_step: str | None = None,
 ) -> dict:
-    def _call() -> dict:
+    def _call() -> tuple[dict, dict | None]:
         response = _openai_client().chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -305,7 +343,14 @@ def _chat_json(
             response_format={"type": "json_object"},
         )
         _track_tokens(response.usage)
-        return json.loads(response.choices[0].message.content)
+        usage = None
+        if response.usage is not None:
+            usage = {
+                "input_tokens": response.usage.prompt_tokens,
+                "output_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            }
+        return json.loads(response.choices[0].message.content), usage
 
     return traced_llm_json(
         parent_run,
@@ -399,6 +444,7 @@ async def _check_audio_quality(
 
     wav_bytes = _to_wav_bytes(audio_bytes)
     y, sr = librosa.load(io.BytesIO(wav_bytes), sr=None, mono=True)
+    _pipeline_audio_duration.set(librosa.get_duration(y=y, sr=sr))
     rms = librosa.feature.rms(y=y)[0]
     signal_power = float(np.mean(rms ** 2))
     noise_power = float(np.percentile(rms, 10) ** 2)
@@ -524,14 +570,56 @@ async def _transcribe(session: Session, story: Story, *, trace_parent: Any | Non
         form["language_code"] = (None, lang_code)
 
     settings = get_settings()
-    response = httpx.post(
-        "https://api.elevenlabs.io/v1/speech-to-text",
-        headers={"xi-api-key": settings.elevenlabs_api_key},
-        files=form,
-        timeout=120,
-    )
-    response.raise_for_status()
-    data = response.json()
+    duration_seconds = _pipeline_audio_duration.get(None) or 0.0
+    el_started = perf_counter()
+    with trace_pipeline_step(
+        trace_parent,
+        story,
+        step="transcription",
+        run_type="tool",
+        inputs={"story_id": str(story.id), "model_id": "scribe_v2"},
+        model="scribe_v2",
+        processing_step="transcription",
+    ) as el_run:
+        try:
+            response = httpx.post(
+                "https://api.elevenlabs.io/v1/speech-to-text",
+                headers={"xi-api-key": settings.elevenlabs_api_key},
+                files=form,
+                timeout=120,
+            )
+            response.raise_for_status()
+        except Exception as exc:
+            finish_run(
+                el_run,
+                story,
+                step="transcription",
+                outcome="error",
+                model="scribe_v2",
+                processing_step="transcription",
+                error=str(exc),
+                extra={
+                    "latency_ms": int((perf_counter() - el_started) * 1000),
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise
+        else:
+            data = response.json()
+            finish_run(
+                el_run,
+                story,
+                step="transcription",
+                outcome="success",
+                model="scribe_v2",
+                processing_step="transcription",
+                extra={
+                    "latency_ms": int((perf_counter() - el_started) * 1000),
+                    "duration_minutes": round(duration_seconds / 60, 2),
+                    "estimated_cost_usd": round((duration_seconds / 3600) * SCRIBE_V2_RATE_PER_HOUR, 6),
+                    "billing_unit": "audio_duration",
+                },
+            )
 
     raw_words = data.get("words", [])
     segments = _segment_elevenlabs_words(raw_words)
@@ -577,7 +665,13 @@ async def _translate(session: Session, story: Story, *, trace_parent: Any | None
 
     for segment in transcript_segments:
         target_language = Language.en if segment.language == Language.kh else Language.kh
-        translated_text = _translate_text(segment.original_text, segment.language, target_language)
+        translated_text = _translate_text(
+            segment.original_text,
+            segment.language,
+            target_language,
+            parent_run=trace_parent,
+            story=story,
+        )
         session.add(
             TranslationSegment(
                 story_id=story.id,

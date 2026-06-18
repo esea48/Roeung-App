@@ -369,7 +369,7 @@ def archive_story(
     """
     story = _get_keeper_story(session, keeper, story_id)
 
-    if story.status not in (StoryStatus.awaiting_review, StoryStatus.in_review, StoryStatus.published):
+    if story.status not in (StoryStatus.in_review, StoryStatus.published):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Story cannot be archived from its current status"
         )

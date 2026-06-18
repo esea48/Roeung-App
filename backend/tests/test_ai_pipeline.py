@@ -49,6 +49,7 @@ def _make_audio_upload(name: str = "story.wav", content: bytes = b"audio-bytes")
 def _patch_happy_path(monkeypatch):
     async def _fake_transcribe(session, story, *, trace_parent=None):
         from app.models.enums import Language, LanguageDetected
+        ai_pipeline._replace_story_rows(session, TranscriptSegment, story.id)
         story.processing_step = "transcription"
         story.language_detected = LanguageDetected.mixed
         session.add(
@@ -76,7 +77,7 @@ def _patch_happy_path(monkeypatch):
 
     monkeypatch.setattr(ai_pipeline, "_transcribe", _fake_transcribe)
     monkeypatch.setattr(ai_pipeline, "_check_audio_quality", _fake_quality_step)
-    monkeypatch.setattr(ai_pipeline, "_translate_text", lambda text, source, target: f"{text} ({source.value}->{target.value})")
+    monkeypatch.setattr(ai_pipeline, "_translate_text", lambda text, source, target, **kw: f"{text} ({source.value}->{target.value})")
 
 
 async def _fake_quality_step(session, story):
@@ -154,6 +155,7 @@ def test_run_pipeline_happy_path_creates_bilingual_title_options(session, family
 
     _patch_happy_path(monkeypatch)
     monkeypatch.setattr(ai_pipeline, "_chat_json", _fake_chat_json_factory())
+    monkeypatch.setattr("app.api.keepers.get_signed_url", lambda key, **kw: f"https://signed/{key}")
 
     asyncio.run(run_pipeline(str(story.id)))
 
@@ -258,6 +260,7 @@ def test_pipeline_retry_does_not_duplicate_title_rows(session, family, keeper, m
 
     _patch_happy_path(monkeypatch)
     monkeypatch.setattr(ai_pipeline, "_chat_json", _fake_chat_json_factory(fail_people_once=True))
+    monkeypatch.setattr("app.api.keepers.get_signed_url", lambda key, **kw: f"https://signed/{key}")
 
     asyncio.run(run_pipeline(str(story.id)))
 

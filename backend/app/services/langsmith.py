@@ -173,6 +173,7 @@ def finish_run(
     processing_step: str | None = None,
     error: str | None = None,
     extra: dict[str, Any] | None = None,
+    usage_metadata: dict[str, Any] | None = None,
 ) -> None:
     if run is None:
         return
@@ -189,7 +190,10 @@ def finish_run(
         error_type=(extra or {}).get("error_type"),
         extra=extra,
     )
-    run.end(outputs=outputs, error=error, metadata=metadata)
+    final_outputs: dict[str, Any] = dict(outputs) if outputs else {}
+    if usage_metadata:
+        final_outputs["usage_metadata"] = usage_metadata
+    run.end(outputs=final_outputs, error=error, metadata=metadata)
 
 
 def _feedback_client() -> Client | None:
@@ -237,7 +241,11 @@ def traced_llm_json(
     inputs_preview: dict[str, Any] | None = None,
     call_fn: Any,
 ) -> dict[str, Any]:
-    """Run a JSON-producing LLM call under a LangSmith span when enabled."""
+    """Run a JSON-producing LLM call under a LangSmith span when enabled.
+
+    call_fn() must return (result_dict, usage_dict | None) where usage_dict has
+    keys input_tokens, output_tokens, total_tokens for cost tracking.
+    """
     client = get_client()
     trace_inputs = inputs_preview or {
         "system": system,
@@ -245,7 +253,20 @@ def traced_llm_json(
         "schema_hint": schema_hint,
     }
     if client is None or parent_run is None:
-        return call_fn()
+        result, _ = call_fn()
+        return result
+
+    span_metadata = step_metadata(
+        story,
+        step=step,
+        model=model,
+        source_language=source_language,
+        target_language=target_language,
+        processing_step=processing_step,
+        outcome="started",
+    )
+    span_metadata["ls_model_name"] = model
+    span_metadata["ls_provider"] = "openai"
 
     started = time.perf_counter()
     with trace(
@@ -255,18 +276,10 @@ def traced_llm_json(
         project_name=project_name(),
         client=client,
         inputs=trace_inputs,
-        metadata=step_metadata(
-            story,
-            step=step,
-            model=model,
-            source_language=source_language,
-            target_language=target_language,
-            processing_step=processing_step,
-            outcome="started",
-        ),
+        metadata=span_metadata,
     ) as run:
         try:
-            result = call_fn()
+            result, usage = call_fn()
         except Exception as exc:
             finish_run(
                 run,
@@ -296,5 +309,91 @@ def traced_llm_json(
             target_language=target_language,
             processing_step=processing_step,
             extra={"latency_ms": int((time.perf_counter() - started) * 1000)},
+            usage_metadata=usage,
+        )
+        return result
+
+
+def traced_llm_text(
+    parent_run: Any | None,
+    story: Any,
+    *,
+    step: str,
+    model: str,
+    system: str,
+    user: str,
+    source_language: str | None = None,
+    target_language: str | None = None,
+    processing_step: str | None = None,
+    call_fn: Any,
+) -> str:
+    """Run a text-producing LLM call under a LangSmith span when enabled.
+
+    call_fn() must return (result_str, usage_dict | None) where usage_dict has
+    keys input_tokens, output_tokens, total_tokens for cost tracking.
+    """
+    client = get_client()
+    trace_inputs = {
+        "system": system,
+        "user_preview": _truncate_text(user),
+    }
+    if client is None or parent_run is None:
+        result, _ = call_fn()
+        return result
+
+    span_metadata = step_metadata(
+        story,
+        step=step,
+        model=model,
+        source_language=source_language,
+        target_language=target_language,
+        processing_step=processing_step,
+        outcome="started",
+    )
+    span_metadata["ls_model_name"] = model
+    span_metadata["ls_provider"] = "openai"
+
+    started = time.perf_counter()
+    with trace(
+        step,
+        run_type="llm",
+        parent=parent_run,
+        project_name=project_name(),
+        client=client,
+        inputs=trace_inputs,
+        metadata=span_metadata,
+    ) as run:
+        try:
+            result, usage = call_fn()
+        except Exception as exc:
+            finish_run(
+                run,
+                story,
+                step=step,
+                outcome="error",
+                model=model,
+                source_language=source_language,
+                target_language=target_language,
+                processing_step=processing_step,
+                error=str(exc),
+                extra={
+                    "latency_ms": int((time.perf_counter() - started) * 1000),
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise
+
+        finish_run(
+            run,
+            story,
+            step=step,
+            outcome="success",
+            outputs={"text": result},
+            model=model,
+            source_language=source_language,
+            target_language=target_language,
+            processing_step=processing_step,
+            extra={"latency_ms": int((time.perf_counter() - started) * 1000)},
+            usage_metadata=usage,
         )
         return result
